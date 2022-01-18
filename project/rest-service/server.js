@@ -209,7 +209,7 @@ const addMenuItem = (request, response) => {
     });
     
     for (let category of categories){
-        category = pool.query("INSERT INTO menu_item_category(menu_item_id, category_id) VALUES ($1, $2);", [id, category], (error, results) => {
+        category_object = pool.query("INSERT INTO menu_item_category(menu_item_id, category_id) VALUES ($1, $2);", [id, category], (error, results) => {
             if(error){
                 response.status(409).json({
                     "message": "Conflict: Add not possibly"}
@@ -266,7 +266,7 @@ const deleteCategoryFromMenuItem = (request, response) => {
     const id = request.params.id;
     const category = request.params.category;
 
-    menuItem = pool.query("DELETE FROM menu_items WHERE menu_item_id = $1 AND category_id = $2", [id, category], (error, results) => {
+    menuItem = pool.query("DELETE FROM menu_item_category WHERE menu_item_id = $1 AND category_id = $2", [id, category], (error, results) => {
         if(error){
             response.status(409).send("Conflict: Delete not possibly");
         }
@@ -405,9 +405,10 @@ const addCategorieToMenuItem = (request, response) => {
             response.status(404).send("Menu item is not avaiable.");
         }
     });
-    category = pool.query('INSERT INTO public.menu_item_category(menu_item_id, category_id) VALUES ($1,$2)', [id, category], (error, result) => {
+    category_object = pool.query('INSERT INTO public.menu_item_category(menu_item_id, category_id) VALUES ($1,$2)', [id, category], (error, result) => {
         if(error){
-            throw error;
+            response.status(409).send("Conflict: Add not possibly");
+            return;
         }
         response.status(200).json({"message": "Add category to menu was successful."});
     });

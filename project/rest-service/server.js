@@ -66,7 +66,7 @@ const addUser = (request, response) => {
         return;
     }
 
-    webuser = pool.query("INSERT INTO users(user_id, name, password, role_id) VALUES ($1, $2, $3, $4)", [id, name, password, role], (error, results) => {
+    webuser = pool.query("INSERT INTO users(userid, name, role, password) VALUES ($1, $2, $3, $4)", [id, name, role, password], (error, results) => {
         if (error){
             response.status(409).send({"message": "Conflict: Add not possibly"});
         }
@@ -78,7 +78,7 @@ const addUser = (request, response) => {
 const findUser = (request, response) => {
     const id = request.params.id;
 
-    webuser = pool.query("SELECT * FROM users JOIN roles ON roles.role_id = users.role_id WHERE users.user_id = $1", [id], (error, results) => {
+    webuser = pool.query("SELECT * FROM users WHERE userid = $1", [id], (error, results) => {
         if(error){
             response.status(404).send(error);
         }
@@ -92,7 +92,7 @@ const findUser = (request, response) => {
 const deleteUser = (request, response) => {
     const id = request.params.id;
 
-    webuser = pool.query("Select * from users Where user_id = $1", [id], (error, results) => {
+    webuser = pool.query("Select * from users Where userid = $1", [id], (error, results) => {
         if(error){
             response.status(409).send("Conflict");
             return;
@@ -105,7 +105,7 @@ const deleteUser = (request, response) => {
         }
     })
 
-    webuser = pool.query("DELETE FROM public.users WHERE user_id = $1", [id], (error, results) => {
+    webuser = pool.query("DELETE FROM public.users WHERE userid = $1", [id], (error, results) => {
         if(error){
             response.status(409).json({
                 "message": "Conflict: Delete not possibly"
@@ -125,7 +125,7 @@ const updateUser = (request, response) => {
     const password = request.body.password;
     const role = request.body.role;
 
-    webuser = pool.query("UPDATE public.users SET name = $1, password = $2, role_id = $3 WHERE user_id = $4", [name, password, role, id], (error, results) => {
+    webuser = pool.query("UPDATE public.users SET name = $1, password = $2, role = $3 WHERE userid = $4", [name, password, role, id], (error, results) => {
         if(error){
             response.status(404).send("User with this id is not avaiable.");
         }
@@ -155,6 +155,9 @@ const addMenuItem = (request, response) => {
     const title = request.body.title;
     const description = request.body.description;
     const price = request.body.price;
+    const likes = request.body.likes;
+    const dislikes = request.body.dislikes;
+    const status = request.body.status;
     const allergene = request.body.allergene;
     const categories = request.body.categories_id;
 
@@ -200,7 +203,7 @@ const addMenuItem = (request, response) => {
         return;
     }
 
-    menuItem = pool.query("INSERT INTO new_menu_items( menu_item_id, menu_item_title, description, price, allergene) VALUES ($1, $2, $3, $4, $5);", [id, title, description, price, allergene], (error, results) => {
+    menuItem = pool.query("INSERT INTO public.items(itemid, title, description, price, likes, dislikes, status) VALUES ($1, $2, $3, $4, $5, $6, $7);", [id, title, description, price, likes, dislikes, status], (error, results) => {
         if(error){
             response.status(409).json({
                 "message": "Conflict: Add not possibly"}
@@ -209,7 +212,7 @@ const addMenuItem = (request, response) => {
     });
     
     for (let category of categories){
-        category_object = pool.query("INSERT INTO menu_item_category(menu_item_id, category_id) VALUES ($1, $2);", [id, category], (error, results) => {
+        category_object = pool.query("INSERT INTO public.item_hascategory(itemid, categoryid) VALUES ($1, $2);", [id, category], (error, results) => {
             if(error){
                 response.status(409).json({
                     "message": "Conflict: Add not possibly"}
@@ -218,6 +221,16 @@ const addMenuItem = (request, response) => {
             
         })
     }
+
+    for (let allergen of allergene){
+        allergen_object = pool.query("INSERT INTO public.item_hasallergens(itemid, allergen) VALUES ($1, $2);", [id, allergen], (error, results) => {
+            if(error){
+                response.status(409).json({
+                    "message": "Conflict: Add not possibly"}
+                );
+            }
+        });
+    }
     response.status(200).json({"message": "Add was successful"});
     return;
 }
@@ -225,7 +238,7 @@ const addMenuItem = (request, response) => {
 const deleteMenuItem = (request, response) => {
     const id = request.params.id;
 
-    menuItem = pool.query("Select * from new_menu_items Where menu_item_id = $1", [id], (error, results) => {
+    menuItem = pool.query("Select * from items Where itemid = $1", [id], (error, results) => {
         if(error){
             response.status(409).send("Conflict");
             return;
@@ -238,7 +251,7 @@ const deleteMenuItem = (request, response) => {
         }
     })
 
-    menuItem = pool.query("DELETE FROM public.new_menu_items WHERE menu_item_id = $1", [id], (error, results) => {
+    menuItem = pool.query("DELETE FROM items WHERE itemid = $1", [id], (error, results) => {
         if(error){
             response.status(409).json({
                 "message": "Conflict: Delete not possibly"
@@ -247,7 +260,16 @@ const deleteMenuItem = (request, response) => {
         }
     });
 
-    category = pool.query("Delete from menu_item_category Where menu_item_id = $1", [id], (error, result) => {
+    category = pool.query("Delete from item_hascategory Where itemid = $1", [id], (error, result) => {
+        if(error){
+            response.status(409).json({
+                "message": "Conflict: Delete not possibly"
+            });
+            return;
+        }
+    });
+
+    allergene = pool.query("Delete from item_hasallergens Where itemid = $1", [id], (error, results) => {
         if(error){
             response.status(409).json({
                 "message": "Conflict: Delete not possibly"
@@ -303,6 +325,7 @@ const addCategorie = (request, response) => {
 
     const id = request.body.id;
     const title = request.body.name;
+    const description = request.body.description;
 
     if (id == null || id === ""){
         response.status(400).json({
@@ -318,8 +341,15 @@ const addCategorie = (request, response) => {
         return;
     }
 
-    resultID = pool.query("SELECT * FROM public.categories WHERE category_id = $1", [id], (error, results) => {
-        if (results.rows.length > 0) {
+    if(description == null || description === ""){
+        response.status(400).json({
+            "message": "description must be specified"
+        })
+        return;
+    }
+
+    resultID = pool.query("SELECT * FROM public.category WHERE categoryid = $1", [id], (error, results) => {
+        if (results.rowCount > 0) {
             res.status(400).json({
                 "message": "object with id "+ id + " already exits"
             });
@@ -327,7 +357,7 @@ const addCategorie = (request, response) => {
         }
     });
 
-    category = pool.query("INSERT INTO public.categories( category_id, category_name) VALUES ($1, $2)", [id, title], (error, results) => {
+    category = pool.query("INSERT INTO public.category( categoryid, title, description) VALUES ($1, $2, $3)", [id, title, description], (error, results) => {
         if(error){
             response.status(409).send("Conflict: Add not possibly");
             return;
@@ -341,7 +371,7 @@ const addCategorie = (request, response) => {
 const findCategory = (request, response) => {
     const id = request.params.id;
 
-    category = pool.query("SELECT * FROM public.categories WHERE category_id = $1", [id], (error, results) => {
+    category = pool.query("SELECT * FROM public.category WHERE categoryid = $1", [id], (error, results) => {
         if(error){
             response.status(404).send(error);
         }
@@ -355,7 +385,7 @@ const findCategory = (request, response) => {
 const deleteCategory = (request, response) => {
     const id = request.params.id;
 
-    category = pool.query("Select * from categories Where category_id = $1", [id], (error, results) => {
+    category = pool.query("Select * from category Where categoryid = $1", [id], (error, results) => {
         if(error){
             response.status(409).send("Conflict");
             return;
@@ -368,7 +398,7 @@ const deleteCategory = (request, response) => {
         }
     })
 
-    category = pool.query("DELETE FROM public.categories WHERE category_id = $1", [id], (error, results) => {
+    category = pool.query("DELETE FROM public.category WHERE categoryid = $1", [id], (error, results) => {
         if(error){
             response.status(409).json({
                 "message": "Conflict: Delete not possibly"
@@ -384,8 +414,9 @@ const deleteCategory = (request, response) => {
 const updateCategory = (request, response) => {
     const id = request.params.id;
     const title = request.body.name;
+    const description = request.body.description;
 
-    category = pool.query("UPDATE public.categories SET category_name = $1 WHERE category_id = $2", [title, id], (error, results) => {
+    category = pool.query("UPDATE public.category SET title = $1, description = $2 WHERE categoryid = $3", [title, description, id], (error, results) => {
         if(error){
             response.status(404).send("Category with this id is not avaiable.");
         }
@@ -420,9 +451,10 @@ function getCategories(results){
     let resultMap = [];
 
     for(const row of resultRow){
-        resultMap[row.category_id] = {
-            id: row.category_id,
-            name: row.category_name
+        resultMap[row.categoryid] = {
+            id: row.categoryid,
+            name: row.title,
+            description: row.description
         }
     }
 
@@ -436,11 +468,11 @@ function getUser(results){
     let resultMap = [];
 
     for(const row of resultRow){
-        resultMap[row.user_id] = {
-            id: row.user_id,
+        resultMap[row.userid] = {
+            id: row.userid,
             name: row.name,
-            password: row.password,
-            role_title: row.role_title
+            role: row.role,
+            password: row.password  
         };
     }
 
@@ -454,18 +486,24 @@ function getMenuItem(results){
     let resultMap = [];
 
     for(const row of resultRow){
-        if(resultMap[row.menu_item_id] != null){
-            if(row.category_name != null){
-                resultMap[row.menu_item_id].categories.push(row.category_name);
+        if(resultMap[row.itemid] != null){
+            if(row.categorytitle != null && resultMap[row.itemid].categories.indexOf(row.categorytitle) == -1){
+                resultMap[row.itemid].categories.push(row.categorytitle);
+            }
+            if(row.allergen != null && resultMap[row.itemid].allergene.indexOf(row.allergen) == -1){
+                resultMap[row.itemid].allergene.push(row.allergen);
             }
         }else {
-            resultMap[row.menu_item_id] = {
-                id: row.menu_item_id,
-                title: row.menu_item_title,
+            resultMap[row.itemid] = {
+                id: row.itemid,
+                title: row.title,
                 description: row.description,
                 price: row.price,
-                allergene: row.allergene,
-                categories: row.category_name != null ? [row.category_name] : []
+                likes: row.likes,
+                dislikes: row.dislikes,
+                status: row.status,
+                allergene: row.allergen != null ? [row.allergen] : [],
+                categories: row.categorytitle != null ? [row.categorytitle] : []
             };
         }
     }
@@ -475,7 +513,7 @@ function getMenuItem(results){
 }
 
 const findAllCategories = async (request, response) => {
-    category = await pool.query("SELECT * FROM public.categories", (error, results) => {
+    category = await pool.query("SELECT * FROM public.category", (error, results) => {
         if(error){
             response.status(404).send(error);
         }
@@ -488,7 +526,7 @@ const findAllCategories = async (request, response) => {
 }
 
 const findAllMenuItems = (request, response) => {
-    menuItem = pool.query("SELECT new_menu_items.*, categories.category_name FROM new_menu_items Inner Join menu_item_category On menu_item_category.menu_item_id = new_menu_items.menu_item_id Left Join categories on menu_item_category.category_id = categories.category_id;", (error, results) => {
+    menuItem = pool.query("SELECT distinct items.*, item_hasallergens.allergen, category.title as categorytitle FROM public.items Inner Join item_hasallergens On item_hasallergens.itemid = items.itemid Inner Join item_hascategory On item_hascategory.itemid = items.itemid Left Join category On category.categoryid = item_hascategory.categoryid;", (error, results) => {
         if(error){
             response.status(404).send(error);
         }
@@ -500,7 +538,7 @@ const findAllMenuItems = (request, response) => {
 }
 
 const findAllUsers = (request, response) => {
-    webuser = pool.query("SELECT users.*, roles.role_title FROM users JOIN roles ON roles.role_id = users.role_id", (error, results) => {
+    webuser = pool.query("SELECT * FROM public.users", (error, results) => {
         if(error){
             response.status(404).send(error);
         }

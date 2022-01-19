@@ -315,6 +315,34 @@ const updateMenuItem = (request, response) => {
     });
 }
 
+const likeMenuItem = (request, response) => {
+    const id = request.params.id;
+
+    menuItem = pool.query("UPDATE public.items SET likes=likes+1 WHERE itemid = $1;", [id], (error, results) => {
+        if(error){
+            response.status(404).send("Menu item with this id is not avaiable.");
+        }
+        if(results.rowCount == 0){
+            response.status(404).send("Menu item with this id is not avaiable.");
+        }
+        response.status(200).json({"message":"Menu Item with id " + id + " liked"});
+    });
+}
+
+const dislikeMenuItem = (request, response) => {
+    const id = request.params.id;
+
+    menuItem = pool.query("UPDATE public.items SET dislikes=dislikes+1 WHERE itemid = $1;", [id], (error, results) => {
+        if(error){
+            response.status(404).send("Menu item with this id is not avaiable.");
+        }
+        if(results.rowCount == 0){
+            response.status(404).send("Menu item with this id is not avaiable.");
+        }
+        response.status(200).json({"message":"Menu Item with id " + id + " disliked"});
+    });
+}
+
 const addCategorie = (request, response) => {
     if (request.body == null){
         response.status(400).json({
@@ -566,7 +594,9 @@ module.exports = {
     addCategorieToMenuItem,
     findAllCategories,
     findAllMenuItems,
-    findAllUsers
+    findAllUsers,
+    likeMenuItem,
+    dislikeMenuItem
 }
 
 app.post("/user", addUser);
@@ -582,6 +612,8 @@ app.delete("/menuItem/category/:id/:category", deleteCategoryFromMenuItem);
 app.put("/menuItem/:id", updateMenuItem);
 app.post("/menuItem/category/:id/:category", addCategorieToMenuItem);
 app.get("/menuItems/", findAllMenuItems)
+app.put("/menuItem/like/:id", likeMenuItem);
+app.put("/menuItem/dislike/:id", dislikeMenuItem);
 
 app.post("/category", addCategorie);
 app.get("/category/:id", findCategory);

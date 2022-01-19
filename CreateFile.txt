@@ -1,0 +1,67 @@
+create table users(
+userID int NOT NULL PRIMARY KEY,
+name varchar(255) not null,
+role varchar(255) not null,
+password varchar(255) not null
+);
+
+create table items (
+itemId int PRIMARY KEY not null,
+title varchar(255) not null,
+description varchar not null,
+price decimal(10,2) not null,
+likes int not null,
+dislikes int not null,
+status varchar(255) not null
+);
+
+create table category (
+categoryId int primary key not null,
+title varchar(255) NOT NULL,
+description varchar(255 ) NOT NULL
+);
+create table orders (
+orderId int NOT NULL  PRIMARY KEY,
+status varchar(255) NOT NULL,
+orderDate date NOT NULL,
+lableId int NOT NULL,
+paymentPreference varchar(255) NOT NULL,
+paymentToken varchar(255) NOT NULL,
+totalAmount decimal(10,2) NOT NULL
+);
+
+create table orderedItems (
+orderedItemsId int primary key,
+itemId int references items(itemId) on delete cascade,
+quantity int NOT NULL,
+status varchar(255) NOT NULL,
+orderId int references orders (orderId) on delete cascade
+	
+);
+
+
+ 
+create table item_hasAllergens (
+itemId int references items (itemId) on delete cascade,
+allergen varchar(255) 
+);
+
+create table item_hasCategory (
+itemId int references items (itemId) on delete cascade,
+categoryId int references category (categoryId) on delete cascade
+);
+
+create table reviews (
+firstname varchar(255),
+surname varchar(255),
+reviewDate DATE not null,
+textComment varchar,
+stars int not null
+);
+
+create table consultations(
+consulId int not null PRIMARY KEY,
+tableId int not null,
+timestamp date,
+status varchar(255)
+);

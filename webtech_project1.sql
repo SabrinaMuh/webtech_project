@@ -7,6 +7,8 @@
 
 -- Started on 2022-01-18 19:28:50
 
+
+
 SET statement_timeout = 0;
 SET lock_timeout = 0;
 SET idle_in_transaction_session_timeout = 0;
@@ -21,6 +23,8 @@ SET row_security = off;
 SET default_tablespace = '';
 
 SET default_table_access_method = heap;
+
+
 
 --
 -- TOC entry 211 (class 1259 OID 24576)

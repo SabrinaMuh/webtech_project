@@ -139,7 +139,7 @@ const updateUser = (request, response) => {
 const findMenuItem = (request, response) => {
     const id = request.params.id;
 
-    menuItem = pool.query("SELECT new_menu_items.*, categories.category_name FROM new_menu_items Inner Join menu_item_category On menu_item_category.menu_item_id = new_menu_items.menu_item_id Left Join categories on menu_item_category.category_id = categories.category_id Where new_menu_items.menu_item_id = $1", [id], (error, results) => {
+    menuItem = pool.query("SELECT * FROM public.items Where itemid = $1;", [id], (error, results) => {
         if(error){
             response.status(404).send(error);
         }
@@ -302,9 +302,9 @@ const updateMenuItem = (request, response) => {
     const title = request.body.title;
     const description = request.body.description;
     const price = request.body.price;
-    const allergene = request.body.allergene;
+    const status = request.body.status;
 
-    menuItem = pool.query("UPDATE public.new_menu_items SET menu_item_title=$1, description=$2, price=$3, allergene=$4 WHERE menu_item_id = $5", [title, description, price, allergene, id], (error, results) => {
+    menuItem = pool.query("UPDATE public.items	SET title=$1, description=$2, price=$3, status=$4 WHERE itemid = $5;", [title, description, price, status, id], (error, results) => {
         if(error){
             response.status(404).send("Menu item with this id is not avaiable.");
         }

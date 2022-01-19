@@ -455,7 +455,7 @@ const updateCategory = (request, response) => {
 const addCategorieToMenuItem = (request, response) => {
     const id = request.params.id;
     const category = request.params.category;
-
+    
     menuItem = pool.query('SELECT * FROM new_menu_items WHERE menu_item_id = $1', [id], function (error, result) {
         if(error){
             response.status(404).send("Menu item is not avaiable.");
@@ -537,8 +537,11 @@ function getMenuItem(results){
     }
 
     let response = Object.values(resultMap);
+    console.log(response)
     return response;
 }
+
+
 
 const findAllCategories = async (request, response) => {
     category = await pool.query("SELECT * FROM public.category", (error, results) => {
@@ -576,6 +579,20 @@ const findAllUsers = (request, response) => {
         response.status(200).send(getUser(results));
     });
 }
+
+const loadProducts = function () {
+    return new Promise((resolve, reject) => {
+        pool.query(`select i.itemid, i.title, i.description, i.price, i.likes, i.dislikes, i.status, array_to_string(array_agg(h.allergen), ', ') as allergen 
+        from items i, item_hasallergens h  where i.itemid = h.itemid group by i.itemid order by i.itemid  `, (err, res) => {
+            if(err) {
+                reject(err);
+            } else {
+                resolve(res);
+            }
+        });
+    });
+}
+
 
 module.exports = {
     addUser,
@@ -620,6 +637,20 @@ app.get("/category/:id", findCategory);
 app.delete("/category/:id", deleteCategory);
 app.put("/category/:id", updateCategory);
 app.get("/categories", findAllCategories);
+
+app.get("/products/", (req, res) => {
+    // TODO: write your code here to get the list of products from the DB pool
+    loadProducts()
+        .then(dbResult => {
+         res.send(dbResult.rows);
+		 console.log(dbResult.rows)
+        })
+        .catch(error => {
+            console.log(`Error while trying to read from db: ${error}`);
+            res.contentType("text/html");
+            res.status(400).send("ErrorPage not found on the server")
+        });
+    });
 	
 let port = 3000;
 app.listen(port);

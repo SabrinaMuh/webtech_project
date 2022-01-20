@@ -288,7 +288,7 @@ const deleteCategoryFromMenuItem = (request, response) => {
     const id = request.params.id;
     const category = request.params.category;
 
-    menuItem = pool.query("DELETE FROM menu_item_category WHERE menu_item_id = $1 AND category_id = $2", [id, category], (error, results) => {
+    menuItem = pool.query("DELETE FROM public.item_hascategory WHERE itemid = $1 And categoryid = $2;", [id, category], (error, results) => {
         if(error){
             response.status(409).send("Conflict: Delete not possibly");
         }
@@ -455,16 +455,8 @@ const updateCategory = (request, response) => {
 const addCategorieToMenuItem = (request, response) => {
     const id = request.params.id;
     const category = request.params.category;
-    
-    menuItem = pool.query('SELECT * FROM new_menu_items WHERE menu_item_id = $1', [id], function (error, result) {
-        if(error){
-            response.status(404).send("Menu item is not avaiable.");
-        }
-        if(result.rowCount == 0){
-            response.status(404).send("Menu item is not avaiable.");
-        }
-    });
-    category_object = pool.query('INSERT INTO public.menu_item_category(menu_item_id, category_id) VALUES ($1,$2)', [id, category], (error, result) => {
+
+    category_object = pool.query('INSERT INTO public.item_hascategory(itemid, categoryid) VALUES ($1, $2);', [id, category], (error, result) => {
         if(error){
             response.status(409).send("Conflict: Add not possibly");
             return;
@@ -537,11 +529,38 @@ function getMenuItem(results){
     }
 
     let response = Object.values(resultMap);
-    console.log(response)
+    //console.log(response)
     return response;
 }
 
+function getAllergene(results) {
+    resultRow = results.rows;
 
+    let resultMap = [];
+
+    for(const row of resultRow){
+        resultMap[row.allergen] = row.allergen;
+    }
+
+    let response = Object.values(resultMap);
+    return response;
+}
+
+function getCategoriesForMenuItem(results) {
+    resultRow = results.rows;
+
+    let resultMap = [];
+
+    for(const row of resultRow){
+        resultMap[row.categoryid] = {
+            id: row.categoryid,
+            name: row.title
+        };
+    }
+
+    let response = Object.values(resultMap);
+    return response;
+}
 
 const findAllCategories = async (request, response) => {
     category = await pool.query("SELECT * FROM public.category", (error, results) => {
@@ -593,6 +612,51 @@ const loadProducts = function () {
     });
 }
 
+const findAllergeneForMenuItem = (request, response) => {
+    const id = request.params.id;
+
+    allergene = pool.query("SELECT allergen FROM public.item_hasallergens Where itemid = $1;", [id], (error, results) => {
+        if(error){
+            response.status(404).json({"message": error});
+        }
+        response.status(200).send(getAllergene(results));
+    });
+}
+
+const addAllergeneToMenuItem = (request, response) => {
+    const id = request.params.id;
+    const allergen = request.params.allergen;
+
+    allergene = pool.query("INSERT INTO public.item_hasallergens(itemid, allergen) VALUES ($1, $2);", [id, allergen], (error, results) => {
+        if(error){
+            response.status(404).json({"message": error});
+        }
+        response.status(200).json({"message": "Allergene was added to " + id});
+    })
+}
+
+const deleteAllergeneFromMenuItem = (request, response) => {
+    const id = request.params.id;
+    const allergen = request.params.allergen;
+
+    allergene = pool.query("DELETE FROM public.item_hasallergens WHERE itemid = $1 And allergen = $2;", [id, allergen], (error, results) => {
+        if(error){
+            response.status(404).json({"message": error});
+        }
+        response.status(200).json({"message": "Allergene was deleted from " + id});
+    });
+}
+
+const findCategoriesForMenuItem = (request, response) => {
+    const id = request.params.id;
+
+    categories = pool.query("SELECT category.categoryid, category.title FROM item_hascategory Left Join category On item_hascategory.categoryid = category.categoryid Where item_hascategory.itemid = $1;", [id], (error, results) => {
+        if(error){
+            response.status(404).json({"message": error});
+        }
+        response.status(200).send(getCategoriesForMenuItem(results));
+    });
+}
 
 module.exports = {
     addUser,
@@ -613,7 +677,11 @@ module.exports = {
     findAllMenuItems,
     findAllUsers,
     likeMenuItem,
-    dislikeMenuItem
+    dislikeMenuItem,
+    findAllergeneForMenuItem,
+    addAllergeneToMenuItem,
+    deleteAllergeneFromMenuItem,
+    findCategoriesForMenuItem
 }
 
 app.post("/user", addUser);
@@ -625,12 +693,16 @@ app.get("/users", findAllUsers);
 app.get("/menuItem/:id", findMenuItem);
 app.post("/menuItem", addMenuItem);
 app.delete("/menuItem/:id", deleteMenuItem);
-app.delete("/menuItem/category/:id/:category", deleteCategoryFromMenuItem);
+app.delete("/menuItem/categories/:id/:category", deleteCategoryFromMenuItem);
 app.put("/menuItem/:id", updateMenuItem);
-app.post("/menuItem/category/:id/:category", addCategorieToMenuItem);
+app.post("/menuItem/categories/:id/:category", addCategorieToMenuItem);
 app.get("/menuItems/", findAllMenuItems)
 app.put("/menuItem/like/:id", likeMenuItem);
 app.put("/menuItem/dislike/:id", dislikeMenuItem);
+app.get("/menuItem/allergene/:id", findAllergeneForMenuItem);
+app.post("/menuItem/allergene/:id/:allergen", addAllergeneToMenuItem);
+app.delete("/menuItem/allergene/:id/:allergen", deleteAllergeneFromMenuItem);
+app.get("/menuItem/categories/:id", findCategoriesForMenuItem);
 
 app.post("/category", addCategorie);
 app.get("/category/:id", findCategory);

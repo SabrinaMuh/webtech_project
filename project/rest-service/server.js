@@ -612,6 +612,17 @@ const loadProducts = function () {
     });
 }
 
+const loadReviews = function () {
+    return new Promise((resolve, reject) => {
+        pool.query(`select * from reviews`, (err, res) => {
+            if(err) {
+                reject(err);
+            } else {
+                resolve(res);
+            }
+        });
+    });
+}
 const findAllergeneForMenuItem = (request, response) => {
     const id = request.params.id;
 
@@ -723,6 +734,22 @@ app.get("/products/", (req, res) => {
             res.status(400).send("ErrorPage not found on the server")
         });
     });
+
+    app.get("/reviews", (req, res) => {
+        // TODO: write your code here to get the list of products from the DB pool
+        loadProducts()
+            .then(dbResult => {
+             res.send(dbResult.rows);
+             console.log(dbResult.rows)
+            })
+            .catch(error => {
+                console.log(`Error while trying to read from db: ${error}`);
+                res.contentType("text/html");
+                res.status(400).send("ErrorPage not found on the server")
+            });
+        });
+
+
 	
 let port = 3000;
 app.listen(port);

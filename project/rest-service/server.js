@@ -396,6 +396,8 @@ const addCategorie = (request, response) => {
     });
 }
 
+
+
 const findCategory = (request, response) => {
     const id = request.params.id;
 
@@ -464,6 +466,67 @@ const addCategorieToMenuItem = (request, response) => {
         response.status(200).json({"message": "Add category to menu was successful."});
     });
 }
+
+const addReview =  (request, response) =>{
+    if (request.body == null){
+        response.status(400).json({
+            "message": "body is empty"
+        })
+        return;
+    }
+
+    const firstname = request.body.firstname;
+    const surname = request.body.surname;
+    const reviewdate = request.body.reviewdate;
+    const textcomment = request.body.textcomment;
+    const stars = request.body.stars;
+    
+
+    if(reviewdate == null || reviewdate === ''){
+        response.status(400).json({
+            "message": "reviewdate must be specified"
+        })
+        return;
+    }
+    if(textcomment == null || textcomment === ''){
+        response.status(400).json({
+            "message": "textcomment must be specified"
+        })
+        return;
+    }
+
+    if(stars == null || stars === ''){
+        response.status(400).json({
+            "message": "stars must be specified"
+        })
+        return;
+    }
+    if(firstname == null || firstname === ''){
+        response.status(400).json({
+            "message": "firstname must be specified"
+        })
+        return;
+    }
+    if(surname == null || surname === ''){
+        response.status(400).json({
+            "message": "surname must be specified"
+        })
+        return;
+    }
+    
+
+    review = pool.query("INSERT INTO reviews(firstname, surname, reviewdate, textcomment, stars) VALUES ($1, $2, $3, $4, $5)", [firstname, surname, reviewdate,textcomment, stars], (error, results) => {
+        if(error){
+            response.status(409).send("Conflict: Add not possibly");
+            return;
+        }
+        response.status(200).json({
+            "message": "Review  added"});
+            return;
+    });
+
+}
+
 
 function getCategories(results){
     resultRow = results.rows;
@@ -692,7 +755,8 @@ module.exports = {
     findAllergeneForMenuItem,
     addAllergeneToMenuItem,
     deleteAllergeneFromMenuItem,
-    findCategoriesForMenuItem
+    findCategoriesForMenuItem,
+    addReview
 }
 
 app.post("/user", addUser);
@@ -720,6 +784,8 @@ app.get("/category/:id", findCategory);
 app.delete("/category/:id", deleteCategory);
 app.put("/category/:id", updateCategory);
 app.get("/categories", findAllCategories);
+
+app.post("/reviews", addReview);
 
 app.get("/products/", (req, res) => {
     // TODO: write your code here to get the list of products from the DB pool

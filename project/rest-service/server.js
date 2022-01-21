@@ -737,7 +737,7 @@ app.get("/products/", (req, res) => {
 
     app.get("/reviews", (req, res) => {
         // TODO: write your code here to get the list of products from the DB pool
-        loadProducts()
+        loadReviews()
             .then(dbResult => {
              res.send(dbResult.rows);
              console.log(dbResult.rows)

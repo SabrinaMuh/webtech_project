@@ -816,9 +816,11 @@ const loadConsulID = (request, response) => {
     id = pool.query("SELECT consulid FROM public.consultations where tableid = ($1) and status = 'waiting'", [tableid], (error, results) => {
         if(error){
             response.status(404).send(error);
+            return;
         }
         if(results.rowCount == 0){
-            response.status(404).send("No Waiter Call at this Table");
+            response.status(404).send("No Waiter-Call at this Table");
+            return;
         }
 
     let resultMap = [];
@@ -843,11 +845,12 @@ const loadConsulStatus = (request, response) => {
     pool.query("SELECT status FROM public.consultations where consulid = ($1) and tableid = ($2)", [id, tableid], (error, results) => {
         if(error){
             response.status(404).send(error);
+            return;
         }
         if(results.rowCount == 0){
             response.status(404).send("No Status for this ID/Table");
+            return;
         }
-
 
         let resultMap = [];
 

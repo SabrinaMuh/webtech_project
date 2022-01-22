@@ -791,6 +791,80 @@ const findCategoriesForMenuItem = (request, response) => {
     });
 }
 
+const addWaiterCall = (request, response) => {
+
+    const table = request.params.table;
+    var date = new Date();
+    var dateString = date.getFullYear() + '-' + date.getMonth()+1 + '-' + date.getDate() + "";
+    const status = 'waiting';
+
+    category_object = pool.query('INSERT INTO public.consultations(tableid, timestamp, status) VALUES ($1, $2, $3);', [table, dateString, status], (error, result) => {
+        if(error){
+            response.status(409).send("Conflict: Adding the Consultation not possibly");
+            console.log("Conflict: Adding the Consultation not possibly");
+            return;
+        }
+        response.status(200).json({"message": "Adding the Consultation was successfull"});
+        console.log("Adding the Consultation was successfull");
+    });
+}
+
+const loadConsulID = (request, response) => {
+    const tableid = request.params.table;
+    id = pool.query("SELECT consulid FROM public.consultations where tableid = ($1) and status = 'waiting'", [tableid], (error, results) => {
+        if(error){
+            response.status(404).send(error);
+        }
+        if(results.rowCount == 0){
+            response.status(404).send("No Waiter Call at this Table");
+        }
+
+    let resultMap = [];
+
+    let rows = results.rows
+
+    for(const row of rows){
+        resultMap[row.consulid] = row.consulid;
+    }
+
+    let data = Object.values(resultMap);
+    
+    console.log(data[0]);
+
+    response.status(200).send(data);   
+    });
+}
+
+const loadConsulStatus = (request, response) => {
+    const tableid = request.params.table;
+    const id = request.params.id;
+    pool.query("SELECT status FROM public.consultations where consulid = ($1) and tableid = ($2)", [id, tableid], (error, results) => {
+        if(error){
+            response.status(404).send(error);
+        }
+        if(results.rowCount == 0){
+            response.status(404).send("No Status for this ID/Table");
+        }
+
+
+        let resultMap = [];
+
+        let rows = results.rows
+
+        for(const row of rows){
+            resultMap[row.status] = row.status;
+        }
+
+        let data = Object.values(resultMap);
+    
+        console.log(data[0]);
+
+        response.status(200).send(data);  
+    });
+}
+
+
+
 module.exports = {
     addUser,
     findUser,
@@ -816,7 +890,11 @@ module.exports = {
     deleteAllergeneFromMenuItem,
     findCategoriesForMenuItem,
     addReview,
-    askPayment
+    askPayment,
+    addReview,
+    addWaiterCall,
+    loadConsulID,
+    loadConsulStatus
 }
 
 app.post("/user", addUser);
@@ -848,6 +926,10 @@ app.get("/categories", findAllCategories);
 app.post("/reviews", addReview);
 
 app.post("/payment", askPayment);
+
+app.post("/:table/callWaiter", addWaiterCall);
+app.get("/:table/getCallID", loadConsulID);
+app.get("/:table/getCallStatus/:id", loadConsulStatus);
 
 app.get("/products/", (req, res) => {
     // TODO: write your code here to get the list of products from the DB pool

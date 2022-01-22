@@ -520,7 +520,7 @@ const askPayment = (request, response) =>{
        console.log("Generate JWT Token");
        const token = jwt.sign(request.body, "SECRET", { expiresIn: "3h" });
        console.log(token);
-       response.status(200).send(token);  
+       response.status(200).send(JSON.stringify(token));  
        
        return token;
    }

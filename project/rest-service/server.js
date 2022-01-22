@@ -518,12 +518,9 @@ const askPayment = (request, response) =>{
    //console.log("TotalPrice " + totalPrice);
    if(totalPrice > 0){
        console.log("Generate JWT Token");
-
-
-       {}
-
-
-       const token = jwt.sign(totalPrice, "" + process.env.JWT_KEY, { expiresIn: "" });
+       const token = jwt.sign(request.body, "SECRET", { expiresIn: "3h" });
+       console.log(token);
+       
        return token;
    }
 

@@ -520,13 +520,7 @@ const askPayment = (request, response) =>{
        console.log("Generate JWT Token");
        const token = jwt.sign(totalPrice, "" + process.env.JWT_KEY, { expiresIn: "" });
        return token;
-
    }
-
-    
-
-        
-    
 
 }
 

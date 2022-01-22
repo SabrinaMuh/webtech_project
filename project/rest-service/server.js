@@ -18,6 +18,9 @@ const { response, request } = require('express');
 const { user } = require('pg/lib/defaults');
 const res = require('express/lib/response');
 const req = require('express/lib/request');
+var jwt = require('jsonwebtoken');
+
+
 app.use(bodyParser.json()); // support json encoded bodies
 
 app.get("/", (req, res) => {
@@ -467,6 +470,66 @@ const addCategorieToMenuItem = (request, response) => {
     });
 }
 
+const askPayment = (request, response) =>{
+    if (request.body == null){
+        response.status(400).json({
+            "message": "body is empty"
+        })
+        return;
+    }
+    const totalSum = request.body.totalSum;
+    const shoppingCart = request.body.shoppingCart;
+
+
+    if(totalSum == null || totalSum === ''){
+        response.status(400).json({
+            "message": "totalSum must be specified"
+        })
+        return;
+    }
+    if(shoppingCart == null || shoppingCart === ''){
+        response.status(400).json({
+            "message": "shoppingCart must be specified"
+        })
+        return;
+    }
+    /*
+    sum = pool.query("select SUM(price)from items where itemid = " + i.itemid, (error, results) => {
+        if(error){
+            response.status(409).send("Conflict: Add not possibly");
+            return;
+        }
+        response.status(200).json({
+            "message": "Review  added"});
+            //console.log(results.rows);
+            let rows = results.rows
+            for(const row of rows ){
+              // console.log(row.sum);
+               price = price +  Number(row.sum);
+               console.log(price)
+            }
+            return;
+    });
+    */
+   var totalPrice = 0;
+   for(let i of shoppingCart){
+       totalPrice = totalPrice + Number(i.price);
+   }
+   //console.log("TotalPrice " + totalPrice);
+   if(totalPrice > 0){
+       console.log("Generate JWT Token");
+       const token = jwt.sign(totalPrice, "" + process.env.JWT_KEY, { expiresIn: "" });
+       return token;
+
+   }
+
+    
+
+        
+    
+
+}
+
 const addReview =  (request, response) =>{
     if (request.body == null){
         response.status(400).json({
@@ -526,6 +589,8 @@ const addReview =  (request, response) =>{
     });
 
 }
+
+
 
 
 function getCategories(results){
@@ -756,7 +821,8 @@ module.exports = {
     addAllergeneToMenuItem,
     deleteAllergeneFromMenuItem,
     findCategoriesForMenuItem,
-    addReview
+    addReview,
+    askPayment
 }
 
 app.post("/user", addUser);
@@ -786,6 +852,8 @@ app.put("/category/:id", updateCategory);
 app.get("/categories", findAllCategories);
 
 app.post("/reviews", addReview);
+
+app.post("/payment", askPayment);
 
 app.get("/products/", (req, res) => {
     // TODO: write your code here to get the list of products from the DB pool

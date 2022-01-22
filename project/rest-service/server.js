@@ -18,7 +18,7 @@ const { response, request } = require('express');
 const { user } = require('pg/lib/defaults');
 const res = require('express/lib/response');
 const req = require('express/lib/request');
-var jwt = require('jsonwebtoken');
+const jwt = require('jsonwebtoken');
 
 
 app.use(bodyParser.json()); // support json encoded bodies
@@ -518,6 +518,11 @@ const askPayment = (request, response) =>{
    //console.log("TotalPrice " + totalPrice);
    if(totalPrice > 0){
        console.log("Generate JWT Token");
+
+
+       {}
+
+
        const token = jwt.sign(totalPrice, "" + process.env.JWT_KEY, { expiresIn: "" });
        return token;
    }

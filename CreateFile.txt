@@ -35,8 +35,8 @@ orderedItemsId int primary key,
 itemId int references items(itemId) on delete cascade,
 quantity int NOT NULL,
 status varchar(255) NOT NULL,
-orderId int references orders (orderId) on delete cascade
-	
+orderId int references orders (orderId) on delete cascade,
+orderDate date NOT NULL
 );
 
 

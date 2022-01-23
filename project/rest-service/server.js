@@ -453,7 +453,7 @@ const updateCategory = (request, response) => {
         if(error){
             response.status(404).send("Category with this id is not avaiable.");
         }
-        response.status(200).json({"message": "Category with id " + id + " edited"});
+        response.status(200).json({"message": "Category with id " + iwd + " edited"});
     });
 }
 
@@ -479,7 +479,7 @@ const askPayment = (request, response) =>{
     }
     const totalSum = request.body.totalSum;
     const shoppingCart = request.body.shoppingCart;
-
+    const paymentRef = request.body.paymentRef;
 
     if(totalSum == null || totalSum === ''){
         response.status(400).json({
@@ -493,23 +493,27 @@ const askPayment = (request, response) =>{
         })
         return;
     }
-    /*
-    sum = pool.query("select SUM(price)from items where itemid = " + i.itemid, (error, results) => {
+    if(paymentRef == null || paymentRef === ''){
+        response.status(400).json({
+            "message": "paymentRef must be specified"
+        })
+        return;
+    }
+   
+    const token = mockPaymentServerCheck(paymentRef,request.body );
+    //response.status(200).send(JSON.stringify(token)); 
+
+    order = pool.query("INSERT INTO orders(status, orderdate, tableid, paymentpreference, paymenttoken, totalamount) values ($1, $2, $3, $4, $5, $6) RETURNING orderid;",
+     ["open", new Date(), 1 , paymentRef, token,totalSum ], (error, results) => {
         if(error){
             response.status(409).send("Conflict: Add not possibly");
             return;
         }
         response.status(200).json({
-            "message": "Review  added"});
-            //console.log(results.rows);
-            let rows = results.rows
-            for(const row of rows ){
-              // console.log(row.sum);
-               price = price +  Number(row.sum);
-               console.log(price)
-            }
+            "message": "Review  added" + JSON.stringify(results.rows)});
             return;
     });
+<<<<<<< Updated upstream
     */
    var totalPrice = 0;
    for(let i of shoppingCart){
@@ -524,6 +528,98 @@ const askPayment = (request, response) =>{
        
        return token;
    }
+=======
+
+    
+}
+
+
+
+
+
+const findOrder = (request, response) =>{
+    const id = request.params.id;
+
+    order = pool.query("SELECT * FROM orders where orderid = $1", [id], (error, results) => {
+        if(error){
+            response.status(404).send(error);
+        }
+        if(results.rowCount == 0){
+            response.status(404).send("No Order with this Id!!!");
+        }
+        response.status(200).send(getOrder(results));
+        
+    });
+}
+
+
+function getOrder(results){
+    resultRow = results.rows;
+
+    let resultMap = [];
+
+    for(const row of resultRow){
+        resultMap[row.orderid] = {
+            orderid: row.orderid,
+            status: row.status,
+            orderdate: row.orderdate,
+            tableid: row.tableid,
+            paymentpreference: row.paymentpreference,
+            paymenttoken: row.paymenttoken,
+            totalamount: row.totalamount
+        };
+    }
+    let response = Object.values(resultMap);
+    return response;
+}
+
+const findOrderedItems = (request, response) =>{
+    const id = request.params.id;
+
+    orderedItems = pool.query("SELECT * FROM ordereditems where orderid = $1", [id], (error, results) => {
+        if(error){
+            response.status(404).send(error);
+        }
+        if(results.rowCount == 0){
+            response.status(404).send("No OrderedItems with this Id!!!");
+        }
+        response.status(200).send(getOrderedItems(results));
+    });
+}
+
+function getOrderedItems(results){
+    resultRow = results.rows;
+
+    let resultMap = []
+
+    for(const row of resultRow){
+        resultMap[row.orderid] = {
+            ordereditemsid: row.ordereditemsid,
+            itemid: row.itemid,
+            quantity: row.quantity,
+            status: row.status,
+            orderid: row.orderid,
+            orderdate: row.orderdate
+        };
+    }
+    let response = Object.values(resultMap);
+    return response;
+}
+
+
+
+
+function mockPaymentServerCheck(paymentRef, req){
+    if(paymentRef === 'jsnuebgfglwh3u'){
+        const token = jwt.sign(req, "SECRET", { expiresIn: "3h" });
+        console.log(token);
+        return token;
+    }else{
+        return 'PaymentRef failure';
+
+    }
+
+>>>>>>> Stashed changes
 
 }
 
@@ -900,7 +996,10 @@ module.exports = {
     addReview,
     addWaiterCall,
     loadConsulID,
-    loadConsulStatus
+    loadConsulStatus,
+    getOrder,
+    getOrderedItems
+
 }
 
 app.post("/user", addUser);
@@ -936,6 +1035,10 @@ app.post("/payment", askPayment);
 app.post("/:table/callWaiter", addWaiterCall);
 app.get("/:table/getCallID", loadConsulID);
 app.get("/:table/getCallStatus/:id", loadConsulStatus);
+
+app.get("/:table/getOrder/:id", findOrder);
+
+app.get("/:table/getOrderedItems/:id", findOrderedItems);
 
 app.get("/products/", (req, res) => {
     // TODO: write your code here to get the list of products from the DB pool

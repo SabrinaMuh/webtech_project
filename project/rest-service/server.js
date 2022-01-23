@@ -509,8 +509,13 @@ const askPayment = (request, response) =>{
             response.status(409).send("Conflict: Add not possibly");
             return;
         }
-        response.status(200).json({
-            "message": "Order  added" + JSON.stringify(results.rows)});
+        resultRow = results.rows;
+        let orderID = 0;
+        for(const row of resultRow){
+            orderID =  row.orderid
+            
+        }
+        response.status(200).json({orderID});
             return;
     });
     

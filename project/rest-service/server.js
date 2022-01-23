@@ -515,7 +515,7 @@ const askPayment = (request, response) =>{
             orderID =  row.orderid
             
         }
-        response.status(200).json({orderID});
+        response.status(200).json(orderID);
             return;
     });
     

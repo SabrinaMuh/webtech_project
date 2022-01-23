@@ -510,7 +510,7 @@ const askPayment = (request, response) =>{
             return;
         }
         response.status(200).json({
-            "message": "Review  added" + JSON.stringify(results.rows)});
+            "message": "Order  added" + JSON.stringify(results.rows)});
             return;
     });
     

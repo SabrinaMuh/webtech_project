@@ -24,7 +24,7 @@ create table orders (
 orderId int NOT NULL  PRIMARY KEY,
 status varchar(255) NOT NULL,
 orderDate date NOT NULL,
-lableId int NOT NULL,
+tableId int NOT NULL,
 paymentPreference varchar(255) NOT NULL,
 paymentToken varchar(255) NOT NULL,
 totalAmount decimal(10,2) NOT NULL

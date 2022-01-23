@@ -513,23 +513,6 @@ const askPayment = (request, response) =>{
             "message": "Review  added" + JSON.stringify(results.rows)});
             return;
     });
-<<<<<<< Updated upstream
-    */
-   var totalPrice = 0;
-   for(let i of shoppingCart){
-       totalPrice = totalPrice + Number(i.price);
-   }
-   //console.log("TotalPrice " + totalPrice);
-   if(totalPrice > 0){
-       console.log("Generate JWT Token");
-       const token = jwt.sign(request.body, "SECRET", { expiresIn: "3h" });
-       console.log(token);
-       response.status(200).send(JSON.stringify(token));  
-       
-       return token;
-   }
-=======
-
     
 }
 
@@ -619,7 +602,6 @@ function mockPaymentServerCheck(paymentRef, req){
 
     }
 
->>>>>>> Stashed changes
 
 }
 

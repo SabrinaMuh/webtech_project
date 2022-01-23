@@ -502,6 +502,7 @@ const askPayment = (request, response) =>{
    
     const token = mockPaymentServerCheck(paymentRef,request.body );
     //response.status(200).send(JSON.stringify(token)); 
+    console.log(shoppingCart);
 
     order = pool.query("INSERT INTO orders(status, orderdate, tableid, paymentpreference, paymenttoken, totalamount) values ($1, $2, $3, $4, $5, $6) RETURNING orderid;",
      ["open", new Date(), 1 , paymentRef, token,totalSum ], (error, results) => {
@@ -516,9 +517,30 @@ const askPayment = (request, response) =>{
             
         }
         response.status(200).json(orderID);
+        insertOrderedItems(shoppingCart, orderID);
             return;
     });
+
     
+
+  
+    
+}
+
+function insertOrderedItems(data, orderID){
+    console.log(data);
+    for(let d of data){
+        object = pool.query('insert into ordereditems (itemid,quantity, status,orderid,orderdate) values ($1, $2, $3,$4,$5);', [d.itemid, d.quantity, 'open',orderID,new Date()  ], (error, result) => {
+            if(error){
+                //response.status(409).send("Conflict: Add not possibly");
+                return;
+            }
+            //response.status(200).json({"message": "Add ordereditems  was successful."});
+        });
+
+
+    }
+
 }
 
 
@@ -571,7 +593,9 @@ const findOrderedItems = (request, response) =>{
         if(results.rowCount == 0){
             response.status(404).send("No OrderedItems with this Id!!!");
         }
-        response.status(200).send(getOrderedItems(results));
+        //response.status(200).send(getOrderedItems(results));
+        response.status(200).send((results.rows));
+
     });
 }
 

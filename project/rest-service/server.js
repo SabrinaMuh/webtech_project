@@ -586,7 +586,7 @@ function getOrder(results){
 const findOrderedItems = (request, response) =>{
     const id = request.params.id;
 
-    orderedItems = pool.query("SELECT * FROM ordereditems where orderid = $1", [id], (error, results) => {
+    orderedItems = pool.query("select o.ordereditemsid, o.itemid, o.quantity, o.status, o.orderid, o.orderdate, i.title from ordereditems o, items i where orderid = $1 and i.itemid = o.itemid", [id], (error, results) => {
         if(error){
             response.status(404).send(error);
         }

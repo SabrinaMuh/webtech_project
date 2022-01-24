@@ -480,6 +480,10 @@ const askPayment = (request, response) =>{
     const totalSum = request.body.totalSum;
     const shoppingCart = request.body.shoppingCart;
     const paymentRef = request.body.paymentRef;
+    
+    const tableNumber = request.params.table;
+    console.log("table Number" + tableNumber);
+    
 
     if(totalSum == null || totalSum === ''){
         response.status(400).json({
@@ -505,7 +509,7 @@ const askPayment = (request, response) =>{
     console.log(shoppingCart);
 
     order = pool.query("INSERT INTO orders(status, orderdate, tableid, paymentpreference, paymenttoken, totalamount) values ($1, $2, $3, $4, $5, $6) RETURNING orderid;",
-     ["open", new Date(), 1 , paymentRef, token,totalSum ], (error, results) => {
+     ["open", new Date(), tableNumber , paymentRef, token,totalSum ], (error, results) => {
         if(error){
             response.status(409).send("Conflict: Add not possibly");
             return;
@@ -1039,9 +1043,13 @@ app.delete("/category/:id", deleteCategory);
 app.put("/category/:id", updateCategory);
 app.get("/categories", findAllCategories);
 
-app.post("/reviews", addReview);
 
-app.post("/payment", askPayment);
+
+
+
+app.post("/:table/dashboard/reviews", addReview);
+
+app.post("/:table/dashboard/payment", askPayment);
 
 app.post("/:table/callWaiter", addWaiterCall);
 app.get("/:table/getCallID", loadConsulID);
@@ -1051,8 +1059,7 @@ app.get("/:table/getOrder/:id", findOrder);
 
 app.get("/:table/getOrderedItems/:id", findOrderedItems);
 
-app.get("/products/", (req, res) => {
-    // TODO: write your code here to get the list of products from the DB pool
+app.get("/:table/dashboard/products/", (req, res) => {
     loadProducts()
         .then(dbResult => {
          res.send(dbResult.rows);
@@ -1065,7 +1072,7 @@ app.get("/products/", (req, res) => {
         });
     });
 
-    app.get("/reviews", (req, res) => {
+    app.get("/:table/dashboard/reviews", (req, res) => {
         // TODO: write your code here to get the list of products from the DB pool
         loadReviews()
             .then(dbResult => {

@@ -850,7 +850,7 @@ const loadProducts = function () {
 
 const loadReviews = function () {
     return new Promise((resolve, reject) => {
-        pool.query(`select * from reviews`, (err, res) => {
+        pool.query(`select * from reviews order by reviewdate asc`, (err, res) => {
             if(err) {
                 reject(err);
             } else {

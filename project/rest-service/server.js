@@ -477,12 +477,16 @@ const askPayment = (request, response) =>{
         })
         return;
     }
+
+
     const totalSum = request.body.totalSum;
     const shoppingCart = request.body.shoppingCart;
     const paymentRef = request.body.paymentRef;
     
     const tableNumber = request.params.table;
     console.log("table Number" + tableNumber);
+
+   
     
 
     if(totalSum == null || totalSum === ''){
@@ -497,7 +501,7 @@ const askPayment = (request, response) =>{
         })
         return;
     }
-    if(paymentRef == null || paymentRef === ''){
+    if(paymentRef == null || paymentRef === '' || paymentRef === '00sd0sd'){
         response.status(400).json({
             "message": "paymentRef must be specified"
         })

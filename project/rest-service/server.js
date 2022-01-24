@@ -905,6 +905,52 @@ const findCategoriesForMenuItem = (request, response) => {
     });
 }
 
+const changeNullValueAllergene = (request, response) => {
+    const id = request.params.id;
+    const allergen = request.params.allergen;
+
+    allergene = pool.query("UPDATE public.item_hasallergens	SET allergen=$1 WHERE itemid = $2;", [allergen, id], (error, results) => {
+        if(error){
+            response.status(404).json({"message": error});
+        }
+        response.status(200).json({"message": "Allergene was added to " + id});
+    });
+}
+
+const changeValueToNullAllergene = (request, response) => {
+    const id = request.params.id;
+
+    allergene = pool.query("UPDATE public.item_hasallergens	SET allergen=null WHERE itemid = $1;", [id], (error, results) => {
+        if(error){
+            response.status(404).json({"message": error});
+        }
+        response.status(200).json({"message": "Allergene was deleted from " + id});
+    });
+}
+
+const changeNullValueCategories = (request, response) => {
+    const id = request.params.id;
+    const category = request.params.category;
+
+    categories = pool.query("UPDATE public.item_hascategory SET categoryid=$1 WHERE itemid=$2;", [category, id], (error, results) => {
+        if(error){
+            response.status(404).json({"message": error});
+        }
+        response.status(200).json({"message": "Category was added to " + id});
+    });
+}
+
+const changeValueToNullCategories = (request, response) => {
+    const id = request.params.id;
+
+    allergene = pool.query("UPDATE public.item_hascategory SET categoryid=null WHERE itemid=$1;", [id], (error, results) => {
+        if(error){
+            response.status(404).json({"message": error});
+        }
+        response.status(200).json({"message": "Category was deleted from " + id});
+    });
+}
+
 const addWaiterCall = (request, response) => {
 
     const table = request.params.table;
@@ -997,6 +1043,8 @@ module.exports = {
     deleteCategory,
     updateCategory,
     addCategorieToMenuItem,
+    changeNullValueCategories,
+    changeValueToNullCategories,
     findAllCategories,
     findAllMenuItems,
     findAllUsers,
@@ -1005,6 +1053,8 @@ module.exports = {
     findAllergeneForMenuItem,
     addAllergeneToMenuItem,
     deleteAllergeneFromMenuItem,
+    changeNullValueAllergene,
+    changeValueToNullAllergene,
     findCategoriesForMenuItem,
     addReview,
     askPayment,
@@ -1029,11 +1079,15 @@ app.delete("/menuItem/:id", deleteMenuItem);
 app.delete("/menuItem/categories/:id/:category", deleteCategoryFromMenuItem);
 app.put("/menuItem/:id", updateMenuItem);
 app.post("/menuItem/categories/:id/:category", addCategorieToMenuItem);
+app.put("/menuItem/categories/:id/:category", changeNullValueCategories);
+app.put("/menuItem/categories/:id", changeValueToNullCategories);
 app.get("/menuItems/", findAllMenuItems)
 app.put("/menuItem/like/:id", likeMenuItem);
 app.put("/menuItem/dislike/:id", dislikeMenuItem);
 app.get("/menuItem/allergene/:id", findAllergeneForMenuItem);
 app.post("/menuItem/allergene/:id/:allergen", addAllergeneToMenuItem);
+app.put("/menuItem/allergene/:id/:allergen", changeNullValueAllergene);
+app.put("/menuItem/allergene/:id", changeValueToNullAllergene);
 app.delete("/menuItem/allergene/:id/:allergen", deleteAllergeneFromMenuItem);
 app.get("/menuItem/categories/:id", findCategoriesForMenuItem);
 

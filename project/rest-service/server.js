@@ -92,6 +92,9 @@ const findUser = (request, response) => {
     });
 }
 
+
+
+
 const deleteUser = (request, response) => {
     const id = request.params.id;
 
@@ -765,7 +768,7 @@ function getMenuItem(results){
     }
 
     let response = Object.values(resultMap);
-    //console.log(response)
+    console.log(response)
     return response;
 }
 
@@ -811,7 +814,8 @@ const findAllCategories = async (request, response) => {
     });
 }
 
-const findAllMenuItems = (request, response) => {
+const findAllMenuItems = async (request, response) => {
+    
     menuItem = pool.query("SELECT distinct items.*, item_hasallergens.allergen, category.title as categorytitle FROM public.items Inner Join item_hasallergens On item_hasallergens.itemid = items.itemid Inner Join item_hascategory On item_hascategory.itemid = items.itemid Left Join category On category.categoryid = item_hascategory.categoryid;", (error, results) => {
         if(error){
             response.status(404).send(error);
@@ -820,7 +824,21 @@ const findAllMenuItems = (request, response) => {
             response.status(404).send("No Menu Items");
         }
         response.status(200).send(getMenuItem(results));
+        
     });
+
+    
+/*
+    products = await pool.query("select items.itemid, items.title, items.description, items.price, items.likes, items.dislikes, items.status from ordereditems, items  where items.itemid = ordereditems.itemid andordereditems.orderdate > CURRENT_DATE - INTERVAL '30' day  group by items.itemid order by SUM(quantity) desc limit 5", (error, results) =>{
+        if(error){
+            response.status(404).send(error);
+        }
+        if(results.rowCount == 0){
+            response.status(404).send("No Menu Items");
+        }
+        response.status(200).send(getMenuItem(results));
+    });
+    */
 }
 
 const findAllUsers = (request, response) => {
@@ -1063,7 +1081,8 @@ module.exports = {
     loadConsulID,
     loadConsulStatus,
     getOrder,
-    getOrderedItems
+    getOrderedItems,
+    
 
 }
 
@@ -1113,18 +1132,9 @@ app.get("/:table/getOrder/:id", findOrder);
 
 app.get("/:table/getOrderedItems/:id", findOrderedItems);
 
-app.get("/:table/dashboard/products/", (req, res) => {
-    loadProducts()
-        .then(dbResult => {
-         res.send(dbResult.rows);
-		 console.log(dbResult.rows)
-        })
-        .catch(error => {
-            console.log(`Error while trying to read from db: ${error}`);
-            res.contentType("text/html");
-            res.status(400).send("ErrorPage not found on the server")
-        });
-    });
+
+app.get("/:table/dashboard/products", findAllMenuItems);
+
 
     app.get("/:table/dashboard/reviews", (req, res) => {
         // TODO: write your code here to get the list of products from the DB pool

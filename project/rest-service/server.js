@@ -771,6 +771,26 @@ function getMenuItem(results){
     console.log(response)
     return response;
 }
+function getToppSeller(results){
+    resultRow = results.rows;
+
+    let resultMap = [];
+    for(const row of resultRow){
+        resultMap[row.itemid] = {
+            id: row.itemid,
+            title: row.title,
+            description: row.description,
+            price: row.price,
+            likes: row.likes,
+            dislikes: row.dislikes,
+            status: row.status,
+            allergene: row.allergen != null ? [row.allergen] : []
+        };
+    }
+    let response = Object.values(resultMap);
+    console.log(response)
+    return response;
+}
 
 function getAllergene(results) {
     resultRow = results.rows;
@@ -826,19 +846,21 @@ const findAllMenuItems = async (request, response) => {
         response.status(200).send(getMenuItem(results));
         
     });
+}
 
+const findToppSeller = async (request, response) => {
     
-/*
-    products = await pool.query("select items.itemid, items.title, items.description, items.price, items.likes, items.dislikes, items.status from ordereditems, items  where items.itemid = ordereditems.itemid andordereditems.orderdate > CURRENT_DATE - INTERVAL '30' day  group by items.itemid order by SUM(quantity) desc limit 5", (error, results) =>{
+    menuItem = pool.query(`select  items.*,  array_to_string(array_agg(item_hasallergens.allergen), ', ') as allergen  from ordereditems, items, item_hasallergens where items.itemid =  item_hasallergens.itemid and items.itemid = ordereditems.itemid and ordereditems.orderdate > CURRENT_DATE - INTERVAL '30' day  group by items.itemid order by SUM(quantity) desc limit 5 `, (error, results) => {
         if(error){
             response.status(404).send(error);
         }
         if(results.rowCount == 0){
             response.status(404).send("No Menu Items");
         }
-        response.status(200).send(getMenuItem(results));
+        response.status(200).send(getToppSeller(results));
+        
     });
-    */
+
 }
 
 const findAllUsers = (request, response) => {
@@ -855,8 +877,7 @@ const findAllUsers = (request, response) => {
 
 const loadProducts = function () {
     return new Promise((resolve, reject) => {
-        pool.query(`select i.itemid, i.title, i.description, i.price, i.likes, i.dislikes, i.status, array_to_string(array_agg(h.allergen), ', ') as allergen 
-        from items i, item_hasallergens h  where i.itemid = h.itemid group by i.itemid order by i.itemid  `, (err, res) => {
+        pool.query(` select  items.*,  array_to_string(array_agg(item_hasallergens.allergen), ', ') as allergen  from ordereditems, items, item_hasallergens where items.itemid =  item_hasallergens.itemid and items.itemid = ordereditems.itemid and ordereditems.orderdate > CURRENT_DATE - INTERVAL '30' day  group by items.itemid order by SUM(quantity) desc limit 5 `, (err, res) => {
             if(err) {
                 reject(err);
             } else {
@@ -1082,6 +1103,8 @@ module.exports = {
     loadConsulStatus,
     getOrder,
     getOrderedItems,
+    findToppSeller,
+    loadProducts
     
 
 }
@@ -1134,6 +1157,7 @@ app.get("/:table/getOrderedItems/:id", findOrderedItems);
 
 
 app.get("/:table/dashboard/products", findAllMenuItems);
+app.get("/:table/dashboard/products/topSeller", findToppSeller);
 
 
     app.get("/:table/dashboard/reviews", (req, res) => {
@@ -1149,8 +1173,22 @@ app.get("/:table/dashboard/products", findAllMenuItems);
                 res.status(400).send("ErrorPage not found on the server")
             });
         });
+/*
+        app.get("/:table/dashboard/products/topSeller", (req, res) => {
+            // TODO: write your code here to get the list of products from the DB pool
+            loadProducts()
+                .then(dbResult => {
+                 res.send(dbResult.rows);
+                 console.log(dbResult.rows)
+                })
+                .catch(error => {
+                    console.log(`Error while trying to read from db: ${error}`);
+                    res.contentType("text/html");
+                    res.status(400).send("ErrorPage not found on the server")
+                });
+            });
 
-
+*/
 	
 let port = 3000;
 app.listen(port);

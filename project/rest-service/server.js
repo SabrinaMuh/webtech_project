@@ -871,7 +871,7 @@ const findAllMenuItems2 = async (request, response) => {
             response.status(404).send("No Menu Items");
         }
         const topSeller = getToppSeller(results[0]);
-        const menuItems =  getToppSeller(results[1]);
+        const menuItems =  getMenuItem(results[1]);
 
         response.status(200).send({
             topSeller,

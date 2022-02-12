@@ -19,6 +19,8 @@ const { user } = require('pg/lib/defaults');
 const res = require('express/lib/response');
 const req = require('express/lib/request');
 const jwt = require('jsonwebtoken');
+const { json } = require('body-parser');
+const { send } = require('express/lib/response');
 
 
 app.use(bodyParser.json()); // support json encoded bodies
@@ -775,19 +777,30 @@ function getToppSeller(results){
     resultRow = results.rows;
 
     let resultMap = [];
+
     for(const row of resultRow){
-        resultMap[row.itemid] = {
-            id: row.itemid,
-            title: row.title,
-            description: row.description,
-            price: row.price,
-            likes: row.likes,
-            dislikes: row.dislikes,
-            status: row.status,
-            allergene: row.allergen != null ? [row.allergen] : [],
-            categories: row.categorytitle != null ? [row.categorytitle] : ['Top Seller']
-        };
+        if(resultMap[row.itemid] != null){
+            if(row.categorytitle != null && resultMap[row.itemid].categories.indexOf(row.categorytitle) == -1){
+                resultMap[row.itemid].categories.push(row.categorytitle);
+            }
+            if(row.allergen != null && resultMap[row.itemid].allergene.indexOf(row.allergen) == -1){
+                resultMap[row.itemid].allergene.push(row.allergen);
+            }
+        }else {
+            resultMap[row.itemid] = {
+                id: row.itemid,
+                title: row.title,
+                description: row.description,
+                price: row.price,
+                likes: row.likes,
+                dislikes: row.dislikes,
+                status: row.status,
+                allergene: row.allergen != null ? [row.allergen] : [],
+                categories: row.categorytitle != null ? [row.categorytitle] : ['Top Seller']
+            };
+        }
     }
+
     let response = Object.values(resultMap);
     console.log(response)
     return response;
@@ -836,8 +849,7 @@ const findAllCategories = async (request, response) => {
 }
 
 const findAllMenuItems = async (request, response) => {
-    
-    menuItem = pool.query("SELECT distinct items.*, item_hasallergens.allergen, category.title as categorytitle FROM public.items Inner Join item_hasallergens On item_hasallergens.itemid = items.itemid Inner Join item_hascategory On item_hascategory.itemid = items.itemid Left Join category On category.categoryid = item_hascategory.categoryid;", (error, results) => {
+    items = await pool.query("SELECT distinct items.*, item_hasallergens.allergen, category.title as categorytitle FROM public.items Inner Join item_hasallergens On item_hasallergens.itemid = items.itemid Inner Join item_hascategory On item_hascategory.itemid = items.itemid Left Join category On category.categoryid = item_hascategory.categoryid ", (error, results) => {
         if(error){
             response.status(404).send(error);
         }
@@ -845,24 +857,31 @@ const findAllMenuItems = async (request, response) => {
             response.status(404).send("No Menu Items");
         }
         response.status(200).send(getMenuItem(results));
-        
     });
+
 }
 
-const findToppSeller = async (request, response) => {
-    
-    menuItem = pool.query(`select  items.*,  array_to_string(array_agg(item_hasallergens.allergen), ', ') as allergen  from ordereditems, items, item_hasallergens where items.itemid =  item_hasallergens.itemid and items.itemid = ordereditems.itemid and ordereditems.orderdate > CURRENT_DATE - INTERVAL '30' day  group by items.itemid order by SUM(quantity) desc limit 5 `, (error, results) => {
+const findAllMenuItems2 = async (request, response) => {
+    items = await pool.query(`select  items.*,  array_to_string(array_agg(item_hasallergens.allergen), ', ') as allergen  from ordereditems, items, item_hasallergens where items.itemid =  item_hasallergens.itemid and items.itemid = ordereditems.itemid and ordereditems.orderdate > CURRENT_DATE - INTERVAL '30' day  group by items.itemid order by SUM(quantity) desc limit 5;
+    SELECT distinct items.*, item_hasallergens.allergen, category.title as categorytitle FROM public.items Inner Join item_hasallergens On item_hasallergens.itemid = items.itemid Inner Join item_hascategory On item_hascategory.itemid = items.itemid Left Join category On category.categoryid = item_hascategory.categoryid `, (error, results) => {
         if(error){
             response.status(404).send(error);
         }
         if(results.rowCount == 0){
             response.status(404).send("No Menu Items");
         }
-        response.status(200).send(getToppSeller(results));
-        
+        const topSeller = getToppSeller(results[0]);
+        const menuItems =  getToppSeller(results[1]);
+
+        response.status(200).send({
+            topSeller,
+            menuItems
+        });
     });
 
 }
+
+
 
 const findAllUsers = (request, response) => {
     webuser = pool.query("SELECT * FROM public.users", (error, results) => {
@@ -1087,6 +1106,7 @@ module.exports = {
     changeValueToNullCategories,
     findAllCategories,
     findAllMenuItems,
+    findAllMenuItems2,
     findAllUsers,
     likeMenuItem,
     dislikeMenuItem,
@@ -1104,7 +1124,6 @@ module.exports = {
     loadConsulStatus,
     getOrder,
     getOrderedItems,
-    findToppSeller,
     loadProducts
     
 
@@ -1157,8 +1176,7 @@ app.get("/:table/getOrder/:id", findOrder);
 app.get("/:table/getOrderedItems/:id", findOrderedItems);
 
 
-app.get("/:table/dashboard/products", findAllMenuItems);
-app.get("/:table/dashboard/products/topSeller", findToppSeller);
+app.get("/:table/dashboard/products", findAllMenuItems2);
 
 
     app.get("/:table/dashboard/reviews", (req, res) => {
@@ -1174,22 +1192,7 @@ app.get("/:table/dashboard/products/topSeller", findToppSeller);
                 res.status(400).send("ErrorPage not found on the server")
             });
         });
-/*
-        app.get("/:table/dashboard/products/topSeller", (req, res) => {
-            // TODO: write your code here to get the list of products from the DB pool
-            loadProducts()
-                .then(dbResult => {
-                 res.send(dbResult.rows);
-                 console.log(dbResult.rows)
-                })
-                .catch(error => {
-                    console.log(`Error while trying to read from db: ${error}`);
-                    res.contentType("text/html");
-                    res.status(400).send("ErrorPage not found on the server")
-                });
-            });
 
-*/
 	
 let port = 3000;
 app.listen(port);

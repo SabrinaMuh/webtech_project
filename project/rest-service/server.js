@@ -784,7 +784,8 @@ function getToppSeller(results){
             likes: row.likes,
             dislikes: row.dislikes,
             status: row.status,
-            allergene: row.allergen != null ? [row.allergen] : []
+            allergene: row.allergen != null ? [row.allergen] : [],
+            categories: row.categorytitle != null ? [row.categorytitle] : ['Top Seller']
         };
     }
     let response = Object.values(resultMap);

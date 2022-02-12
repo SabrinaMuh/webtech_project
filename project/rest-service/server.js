@@ -1059,7 +1059,7 @@ const loadConsulID = (request, response) => {
 const loadConsulStatus = (request, response) => {
     const tableid = request.params.table;
     const id = request.params.id;
-    pool.query("SELECT status FROM public.consultations where consulid = ($1) and tableid = ($2)", [id, tableid], (error, results) => {
+    pool.query("SELECT status FROM public.consultations where consulid = ($1)", [id], (error, results) => {
         if(error){
             response.status(404).send(error);
             return;

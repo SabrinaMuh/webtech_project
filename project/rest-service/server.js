@@ -1017,10 +1017,14 @@ const addWaiterCall = (request, response) => {
     var dateString = date.getFullYear() + '-' + date.getMonth()+1 + '-' + date.getDate() + "";
     const status = 'waiting';
 
+    console.log(table);
+    console.log(dateString);
+    console.log(status);
+
     category_object = pool.query('INSERT INTO public.consultations(tableid, timestamp, status) VALUES ($1, $2, $3);', [table, dateString, status], (error, result) => {
         if(error){
-            response.status(409).send("Conflict: Adding the Consultation not possibly");
-            console.log("Conflict: Adding the Consultation not possibly");
+            response.status(409).send("Conflict: Adding the Consultation not possible");
+            console.log("Conflict: Adding the Consultation not possible");
             return;
         }
         response.status(200).json({"message": "Adding the Consultation was successfull"});

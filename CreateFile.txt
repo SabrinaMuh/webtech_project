@@ -65,3 +65,6 @@ tableId int not null,
 timestamp date,
 status varchar(255)
 );
+
+ALTER TABLE IF EXISTS public.consultations
+    ALTER COLUMN consulid ADD GENERATED ALWAYS AS IDENTITY ( INCREMENT 1 START 20 MINVALUE 1 );

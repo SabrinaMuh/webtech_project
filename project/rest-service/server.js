@@ -23,6 +23,8 @@ const { json } = require('body-parser');
 const { send } = require('express/lib/response');
 
 
+
+
 app.use(bodyParser.json()); // support json encoded bodies
 
 app.get("/", (req, res) => {
@@ -607,6 +609,7 @@ const findOrderedItems = (request, response) =>{
 
     });
 }
+/*
 
 function getOrderedItems(results){
     resultRow = results.rows;
@@ -626,6 +629,7 @@ function getOrderedItems(results){
     let response = Object.values(resultMap);
     return response;
 }
+*/
 
 
 
@@ -1089,6 +1093,174 @@ const loadConsulStatus = (request, response) => {
     });
 }
 
+//For Waiter und Kitchen View
+
+const updateMenuItemStatus = (request, response) => {
+    const id = request.params.id;
+    const status = request.body.status;
+  
+    itemStatus = pool.query("UPDATE items SET status = $1 WHERE itemId = $2", [status, id], (error, results) => {
+      if(error){
+        response.status(404).send("MenuItem with this id is not available.");
+      }
+      response.status(200).json({"message": "MenuItem with id " + id + " now has the status: " + status});
+    });
+  }
+  
+  const getOrderedItems = (request, response) => {
+    orderedItems = pool.query("select i.title, o.status, o.orderId,o.itemId, o.comment from orderedItems o, items i where o.itemId = i.itemId", (error, results) => {
+      if(error){
+        response.status(404).send(error);
+      }
+      response.status(200).send(results.rows);
+    });
+  }
+  
+  const getOrders = (request, response) => {
+    orderedItems = pool.query("select orderId,status,tableId from orders", (error, results) => {
+      if(error){
+        response.status(404).send(error);
+      }
+      response.status(200).send(results.rows);
+    });
+  }
+  
+  const updateOrderedItemStatus = (request, response) => {
+    const id = request.params.id;
+    const status = request.body.status;
+    const orderId = request.body.orderid;
+  
+    itemStatus = pool.query("UPDATE orderedItems SET status = $1 WHERE itemId = $2 and orderId = $3", [status, id,orderId], (error, results) => {
+      if(error){
+        response.status(404).send("OrderedItem with this id is not available.");
+      }
+      response.status(200).json({"message": "Ordered Item with id " + id + " now has the status: " + status});
+    });
+  }
+  
+  const updateOrderedItemComment = (request, response) => {
+    const id = request.params.id;
+    const comment = request.body.comment;
+    const orderId = request.body.orderid;
+  
+    itemComment = pool.query("UPDATE orderedItems SET comment = $1 WHERE itemId = $2 and orderId = $3", [comment, id,orderId], (error, results) => {
+      if(error){
+        response.status(404).send("OrderedItem with this id is not available.");
+      }
+      response.status(200).json({"message": "Ordered Item with id " + id + " now has the comment: " + comment});
+    });
+  }
+  
+  const updateOrderStatus = (request, response) => {
+    const orderId = request.params.id;
+    const status = request.body.status;
+  
+    orderStatus = pool.query("UPDATE orders SET status = $1 WHERE orderid = $2", [status, orderId], (error, results) => {
+      if(error){
+        response.status(404).send("Order with this id is not available.");
+      }
+      response.status(200).json({"message": "Order with orderId " + orderId + " now has the status: " + status});
+    });
+  }
+  
+  const getReadyItems = (request, response) => {
+    readyItems = pool.query("select i.title, o.status, o.orderId, a.tableid from orderedItems o, items i, orders a where o.itemId = i.itemId and o.orderid = a.orderid", (error, results) => {
+      if(error){
+        response.status(404).send(error);
+      }
+      response.status(200).send(results.rows);
+    });
+  }
+  
+  const getConsultations = (request, response) => {
+    consulations = pool.query("select * from consultations", (error, results) => {
+      if(error){
+        response.status(404).send(error);
+      }
+      response.status(200).send(results.rows);
+    });
+  }
+  
+  const deleteConsultation = (request, response) => {
+    const consulId = request.params.id;
+  
+    delConsulations = pool.query("delete from consultations where consulId = $1",[consulId], (error, results) => {
+      if(error){
+        response.status(404).send(error);
+      }
+      response.status(200).json({"message": "Consultation with consulId " + consulId + " has been deleted"});
+    });
+  }
+  
+  const getKitchenCategories = (request,response) =>{
+    getKCategory = pool.query("Select * from category", (error,results) =>{
+      if(error)
+        response.status(400).send(error);
+  
+        response.status(200).send(results.rows);
+    })
+  }
+  
+  const getHasCategory = (request,response) =>{
+    hasCategory = pool.query("Select * from item_hascategory", (error,results) =>{
+      if(error)
+        response.status(400).send(error);
+  
+      response.status(200).send(results.rows);
+    })
+  }
+  
+  const addHasCategory = (request,response) =>{
+    const itemId = request.params.itemId;
+    const catId = request.params.catId;
+  
+    adder = pool.query("Insert into item_hascategory values ($1,$2)", [itemId,catId], (error,results) =>{
+      if(error)
+        response.status(400).send(error);
+      response.status(200).json({"Message": "Item with the id: " + itemId + " now is in category: "+catId})
+    })
+  }
+  
+  const deleteHasCategory = (request,response) =>{
+    const itemId = request.params.itemId;
+    const catId = request.params.catId;
+  
+    adder = pool.query("Delete from item_hascategory where itemid = $1 and categoryid = $2", [itemId,catId], (error,results) =>{
+      if(error)
+        response.status(400).send(error);
+      response.status(200).json({"Message": "Item with the id: " + itemId + " has been removed from category: "+catId})
+    })
+  }
+  
+  const getLoginUser = (request, response) => {
+    username = request.params.username;
+    password = request.params.password;
+  
+    users = pool.query("Select * from users where name = $1 and password = $2",[username, password], (error, results) => {
+        if(error)
+          response.status(400).send(error)
+        else
+          response.status(200).send(results.rows)
+    })
+  }
+
+  const createJWT = (request, response) => {
+
+    const user = {username: request.body.username, password: request.body.password, role: request.body.role}
+    const token = jwt.sign(user,"SECRET",{expiresIn: "1h"})
+    response.status(200).json({accessToken: token})
+  }
+  
+  const checkAuth = (request, response) => {
+    const  authHeader = request.headers["authorization"];
+    const token = authHeader && authHeader.split(" ")[1];
+    if (!token) return response.status(401).send({ error: "UNAUTHORIZED", reason: "No token provided" });
+      jwt.verify(token, "SECRET", (err, user) => {
+        if (err) return response.status(403).send({ error: "UNAUTHORIZED", reason: "Invalid token" });
+        return response.status(200).send({message: "Token validated", role: user.role});
+      });
+  };
+
 
 
 module.exports = {
@@ -1128,7 +1300,24 @@ module.exports = {
     loadConsulStatus,
     getOrder,
     getOrderedItems,
-    loadProducts
+    loadProducts,
+    //Kitchen View
+    updateMenuItemStatus,
+    getOrderedItems,
+    getOrders,
+    updateOrderedItemStatus,
+    updateOrderedItemComment,
+    updateOrderStatus,
+    getReadyItems,
+    getConsultations,
+    deleteConsultation,
+    getKitchenCategories,
+    getHasCategory,
+    addHasCategory,
+    deleteHasCategory,
+    getLoginUser,
+    createJWT,
+    checkAuth
     
 
 }
@@ -1196,6 +1385,26 @@ app.get("/:table/dashboard/products", findAllMenuItems2);
                 res.status(400).send("ErrorPage not found on the server")
             });
         });
+
+        //Kitchen View
+
+        app.put("/menuItem/status/:id", updateMenuItemStatus);
+        app.get("/orderedItems",getOrderedItems);
+        app.get("/orders",getOrders)
+        app.put("/orderedItem/status/:id",updateOrderedItemStatus);
+        app.put("/orderedItem/comment/:id",updateOrderedItemComment);
+        app.put("/order/status/:id",updateOrderStatus);
+        app.get("/readyItems",getReadyItems);
+        app.get("/consultations",getConsultations);
+        app.delete("/consultation/:id",deleteConsultation);
+        app.get("/kitchen/categories", getKitchenCategories);
+        app.get("/hasCategory", getHasCategory);
+        app.post("/hasCategory/:catId/:itemId",addHasCategory);
+        app.delete("/hasCategory/:catId/:itemId",deleteHasCategory);
+        
+        app.get("/login/:username/:password", getLoginUser);
+        app.post("/auth/login",createJWT);
+        app.post("/auth/authenticate", checkAuth);
 
 	
 let port = 3000;

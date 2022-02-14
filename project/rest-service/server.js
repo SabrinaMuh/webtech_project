@@ -478,22 +478,19 @@ const addCategorieToMenuItem = (request, response) => {
 }
 
 const askPayment = (request, response) =>{
+   
     if (request.body == null){
         response.status(400).json({
             "message": "body is empty"
         })
         return;
     }
-
-
     const totalSum = request.body.totalSum;
     const shoppingCart = request.body.shoppingCart;
     const paymentRef = request.body.paymentRef;
     const tableNumber = request.params.table;
 
    
-    
-
     if(totalSum == null || totalSum === ''){
         response.status(400).json({
             "message": "totalSum must be specified"
@@ -504,58 +501,69 @@ const askPayment = (request, response) =>{
         response.status(400).json({
             "message": "shoppingCart must be specified"
         })
+        
         return;
     }
     if(paymentRef == null || paymentRef === '' || paymentRef === '00sd0sd'){
-        response.status(200).json(0);
+        response.status(400).json({
+            "message": "Payment is wrong"
+        })
+        
         return;
     }
-   
-    const token = mockPaymentServerCheck(paymentRef,request.body );
-    //response.status(200).send(JSON.stringify(token)); 
-    console.log(shoppingCart);
-
-    order = pool.query("INSERT INTO orders(status, orderdate, tableid, paymentpreference, paymenttoken, totalamount) values ($1, $2, $3, $4, $5, $6) RETURNING orderid;",
-     ["open", new Date(), tableNumber , paymentRef, token,totalSum ], (error, results) => {
-        if(error){
-            response.status(409).send("Conflict: Add not possibly");
-            return;
-        }
-        resultRow = results.rows;
-        let orderID = 0;
-        for(const row of resultRow){
-            orderID =  row.orderid
-            
-        }
-        response.status(200).json(orderID);
-        insertOrderedItems(shoppingCart, orderID);
-            return;
-    });
-
-    
-
-  
-    
-}
-
-function insertOrderedItems(data, orderID){
-    console.log(data);
-    for(let d of data){
-        object = pool.query('insert into ordereditems (itemid,quantity, status,orderid,orderdate) values ($1, $2, $3,$4,$5);', [d.itemid, d.quantity, 'open',orderID,new Date()  ], (error, result) => {
-            if(error){
-                //response.status(409).send("Conflict: Add not possibly");
-                return;
-            }
-            //response.status(200).json({"message": "Add ordereditems  was successful."});
-        });
-
-
+    if(tableNumber == null || tableNumber === ''){
+        response.status(400).json({
+            "message": "Table number is wrong"
+        })
+        
+        return;
     }
 
+   
+        const token = mockPaymentServerCheck(paymentRef,request.body);
+        response.status(200).send(JSON.stringify(token)); 
+        //console.log(shoppingCart);
+        let data = {totalSum, shoppingCart, paymentRef, tableNumber, token};
+        addOrder(data);
 }
 
+const addOrder = (data, response) => {
+    order = pool.query("INSERT INTO orders(status, orderdate, tableid, paymentpreference, paymenttoken, totalamount) values ($1, $2, $3, $4, $5, $6) RETURNING orderid;",
+    ["open", new Date(), data.tableNumber , data.paymentRef, data.token, data.totalSum], (error, results) => {
+        if (error){
+            response.status(409).send({"message": "Conflict: Add not possibly"});
+        }
+       //console.log(results);
+       resultRow = results.rows;
+       let orderID = 0;
+       for(const row of resultRow){
+           orderID =  row.orderid  
+       }  
+       insertOrderedItems(data.shoppingCart, orderID);    
+   });
+}
 
+const insertOrderedItems = (data, orderID) =>{
+    console.log(data);
+    for(let d of data){
+        insertOrdered = pool.query('insert into ordereditems (itemid,quantity, status,orderid,orderdate) values ($1, $2, $3,$4,$5);', [d.itemid, d.quantity, 'open',orderID,new Date()  ], (error, results) => {
+            if(error){
+             console.log("Conflict: Add not possibly")
+            }
+            //console.log(results);
+        });
+    }
+}
 
+const checkAuthForClientView = (request, response) => {
+    const authHeader = request.headers["authorization"];
+    const token = authHeader && authHeader.split(" ")[1];
+    if (!token) return response.status(401).send({ error: "UNAUTHORIZED", reason: "No token provided" });
+      jwt.verify(token, "SECRET", (err, user) => {
+        if (err) return response.status(403).send({ error: "UNAUTHORIZED", reason: "Invalid token" });
+        return response.status(200).send({message: "Token validated"});
+      });
+  };
 
 
 const findOrder = (request, response) =>{
@@ -609,9 +617,9 @@ const findOrderedItems = (request, response) =>{
 
     });
 }
-/*
 
-function getOrderedItems(results){
+
+function getOrderedItems2(results){
     resultRow = results.rows;
 
     let resultMap = []
@@ -629,9 +637,6 @@ function getOrderedItems(results){
     let response = Object.values(resultMap);
     return response;
 }
-*/
-
-
 
 
 function mockPaymentServerCheck(paymentRef, req){
@@ -640,11 +645,8 @@ function mockPaymentServerCheck(paymentRef, req){
         console.log(token);
         return token;
     }else{
-        return 'PaymentRef failure';
-
+        return '';
     }
-
-
 }
 
 const addReview =  (request, response) =>{
@@ -1180,6 +1182,7 @@ const updateMenuItemStatus = (request, response) => {
       response.status(200).send(results.rows);
     });
   }
+
   
   const deleteConsultation = (request, response) => {
     const consulId = request.params.id;
@@ -1299,7 +1302,7 @@ module.exports = {
     loadConsulID,
     loadConsulStatus,
     getOrder,
-    getOrderedItems,
+    getOrderedItems2,
     loadProducts,
     //Kitchen View
     updateMenuItemStatus,
@@ -1367,12 +1370,8 @@ app.get("/:table/getCallStatus/:id", loadConsulStatus);
 app.get("/:table/getOrder/:id", findOrder);
 
 app.get("/:table/getOrderedItems/:id", findOrderedItems);
-
-
 app.get("/:table/dashboard/products", findAllMenuItems2);
-
-
-    app.get("/:table/dashboard/reviews", (req, res) => {
+app.get("/:table/dashboard/reviews", (req, res) => {
         // TODO: write your code here to get the list of products from the DB pool
         loadReviews()
             .then(dbResult => {

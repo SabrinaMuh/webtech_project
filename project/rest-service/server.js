@@ -1304,6 +1304,7 @@ module.exports = {
     getOrder,
     getOrderedItems2,
     loadProducts,
+    checkAuthForClientView,
     //Kitchen View
     updateMenuItemStatus,
     getOrderedItems,
@@ -1371,6 +1372,7 @@ app.get("/:table/getOrder/:id", findOrder);
 
 app.get("/:table/getOrderedItems/:id", findOrderedItems);
 app.get("/:table/dashboard/products", findAllMenuItems2);
+app.post("/:table/dashboard/payment/jwt", checkAuthForClientView);
 app.get("/:table/dashboard/reviews", (req, res) => {
         // TODO: write your code here to get the list of products from the DB pool
         loadReviews()

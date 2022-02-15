@@ -515,16 +515,17 @@ const askPayment = (request, response) =>{
         response.status(400).json({
             "message": "Table number is wrong"
         })
-        
         return;
     }
 
+    //check if Table Number is in the System
+
    
-        const token = mockPaymentServerCheck(paymentRef,request.body);
-        response.status(200).send(JSON.stringify(token)); 
-        //console.log(shoppingCart);
-        let data = {totalSum, shoppingCart, paymentRef, tableNumber, token};
-        addOrder(data);
+    const token = mockPaymentServerCheck(paymentRef,request.body);
+    response.status(200).send(JSON.stringify(token)); 
+    //console.log(shoppingCart);
+    let data = {totalSum, shoppingCart, paymentRef, tableNumber, token};
+    addOrder(data);
 }
 
 const addOrder = (data, response) => {
@@ -539,7 +540,7 @@ const addOrder = (data, response) => {
        for(const row of resultRow){
            orderID =  row.orderid  
        }  
-       insertOrderedItems(data.shoppingCart, orderID);    
+       insertOrderedItems(data.shoppingCart, orderID); 
    });
 }
 
@@ -550,9 +551,10 @@ const insertOrderedItems = (data, orderID) =>{
             if(error){
              console.log("Conflict: Add not possibly")
             }
-            //console.log(results);
         });
+      
     }
+    
 }
 
 const checkAuthForClientView = (request, response) => {

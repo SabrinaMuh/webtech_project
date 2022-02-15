@@ -1264,7 +1264,133 @@ const updateMenuItemStatus = (request, response) => {
       });
   };
 
+ 
+// ---- Kerstin --------------------------------------------------------------------------
+// ----- TABLES --------------------------------------------------------------------------
+function getTables(results){
+    resultRow = results.rows;
 
+    let resultMap = [];
+
+    for(const row of resultRow){
+        resultMap[row.tableid] = {
+            id: row.tableid,
+            tablenumber: row.tablenumber,
+            capacity: row.capacity,
+            locDesc: row.description
+        }
+    }
+
+    let response = Object.values(resultMap);
+    return response;
+}
+
+const addTable = async(request, response) => {
+    if (request.body == null){
+        response.status(400).json({
+            "message": "body is empty"
+        })
+        return;
+    }
+
+    const tablenumber = request.body.tablenumber;
+    const capacity = request.body.capacity;
+    const desc = request.body.locDesc;
+
+    if(tablenumber == null || tablenumber === ""){
+        response.status(400).json({
+            "message": "tablenumber must be specified"
+        })
+        return;
+    }
+
+    if(capacity == null || capacity === ""){
+        response.status(400).json({
+            "message": "capacity must be specified"
+        })
+        return;
+    }
+
+    table = pool.query("INSERT INTO tables(tablenumber, capacity, description) VALUES ($1, $2, $3)", [tablenumber, capacity, desc], (error, results) => {
+        if(error){
+            response.status(409).send("Conflict: Add not possibly");
+            return;
+        }
+        response.status(200).json({
+            "message": "table with the tablenumber " + tablenumber + " added"});
+            return;
+    });
+}
+
+const findTable = async(request, response) => {
+    const id = request.params.id;
+
+    table = pool.query("SELECT * FROM tables WHERE tableid = $1", [id], (error, results) => {
+        if(error){
+            response.status(404).send(error);
+        }
+        if(results.rowCount == 0){
+            response.status(404).send("No table with this id!!!");
+        }
+        response.status(200).send(getTables(results));
+    });
+}
+
+const deleteTable = async(request, response) => {
+    const id = request.params.id;
+
+    category = pool.query("Select * from tables Where tableid = $1", [id], (error, results) => {
+        if(error){
+            response.status(409).send("Conflict");
+            return;
+        }
+        if(results.rows.length < 1) {
+            res.status(404).json({
+				"message": "no table with id="+id+" found - nothing to delete"
+			});
+			return;
+        }
+    })
+
+    table = pool.query("DELETE FROM tables WHERE tableid = $1", [id], (error, results) => {
+        if(error){
+            response.status(409).json({
+                "message": "Conflict: Delete not possibly"
+            });
+        }
+        response.status(200).json({
+            "message": "Table with the id " + id + " deleted"}
+        );
+        return;
+    })
+}
+
+const updateTable = async(request, response) => {
+    const id = request.body.id;
+    const tablenumber = request.body.tablenumber;
+    const capacity = request.body.capacity;
+    const desc = request.body.locDesc;
+
+
+    category = pool.query("UPDATE tables SET tablenumber = $1, capacity = $2, description = $3 WHERE tableid = $4", [tablenumber, capacity, desc, id], (error, results) => {
+        if(error){
+            response.status(404).send("Table with this id is not avaiable.");
+        }
+        response.status(200).json({"message": "Table with id " + id + " edited"});
+    });
+}
+
+const findAllTables = async(request, response) => {
+    tables = pool.query("SELECT * from tables", (error, results) => {
+        if(error){
+            response.status(404).send(error);
+        }
+        if(results.rowCount == 0){
+            response.status(404).send("No tables found!!!");
+        }
+        response.status(200).send(getTables(results));
+    });
+}
 
 module.exports = {
     addUser,
@@ -1295,6 +1421,13 @@ module.exports = {
     changeNullValueAllergene,
     changeValueToNullAllergene,
     findCategoriesForMenuItem,
+    //------------- Kerstin --------------------------
+    addTable,
+    findTable,
+    deleteTable,
+    updateTable,
+    findAllTables,
+    //-------------------------------------------------
     addReview,
     askPayment,
     addReview,
@@ -1340,7 +1473,7 @@ app.put("/menuItem/:id", updateMenuItem);
 app.post("/menuItem/categories/:id/:category", addCategorieToMenuItem);
 app.put("/menuItem/categories/:id/:category", changeNullValueCategories);
 app.put("/menuItem/categories/:id", changeValueToNullCategories);
-app.get("/menuItems/", findAllMenuItems)
+app.get("/menuItems/", findAllMenuItems);
 app.put("/menuItem/like/:id", likeMenuItem);
 app.put("/menuItem/dislike/:id", dislikeMenuItem);
 app.get("/menuItem/allergene/:id", findAllergeneForMenuItem);
@@ -1357,7 +1490,13 @@ app.put("/category/:id", updateCategory);
 app.get("/categories", findAllCategories);
 
 
-
+// ---------- Kerstin ------------------------------------------------------------------------
+app.post("/tables", addTable);
+app.get("/tables/:id", findTable);
+app.delete("/tables/:id", deleteTable);
+app.put("/tables/:id", updateTable);
+app.get("/tables", findAllTables);
+//---------------------------------------------------------------------------------------------
 
 
 app.post("/:table/dashboard/reviews", addReview);

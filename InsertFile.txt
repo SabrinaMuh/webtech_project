@@ -126,5 +126,16 @@ Insert into reviews values ('Ingrid', 'Ingrid', '2022-01-08', 'Lorem ipsum dolor
 Insert into reviews values ('Tommy', 'Tommy', '2022-01-09', 'Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et', 1 );
 
 Insert into public.tables (tablenumber, capacity, description)
-Values (11, 4, 'The only one table here. You cannot miss it.'),
-(12, 2, 'Eingang links');
+Values 
+(1, 4, 'The only one table here. You cannot miss it.'),
+(2, 4, 'Eingang links'),
+(3, 4, 'Eingang recht'),
+(4, 2, 'Eingang links'),
+(5, 2, 'Eingang links'),
+(6, 6, 'Beim Fenster rechts'),
+(7, 6, 'Beim Fenster rechts'),
+(8, 10, 'Beim Fenster links'),
+(9, 10, 'Beim Fenster links'),
+(10, 10, 'Durch den Gang'),
+(11, 5, 'Durch den Gang'),
+(12, 5, 'Durch den Gang');

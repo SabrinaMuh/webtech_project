@@ -495,13 +495,32 @@ const askPayment = (request, response) =>{
     }
 
     //check if Table Number is in the System
+    tables = pool.query("SELECT * from tables", (error, results) => {
+        if(error){
+            response.status(404).send(error);
+        }
+        if(results.rowCount == 0){
+            response.status(404).send("No tables found!!!");
+        }
+        //response.status(200).send(getTables(results));
+        let table = getTables(results)
+        let numbers = [];
+       for(let temp of table){
+          numbers.push(temp.tablenumber);
+       }
+      if(numbers.includes(Number(tableNumber))){
+        const token = mockPaymentServerCheck(paymentRef,request.body);
+        response.status(200).send(JSON.stringify(token)); 
+        let data = {totalSum, shoppingCart, paymentRef, tableNumber, token};
+        addOrder(data);
+
+      }else{
+        response.status(400).json({"message": "Wrong Tablenumber"});
+      }
+    });
 
    
-    const token = mockPaymentServerCheck(paymentRef,request.body);
-    response.status(200).send(JSON.stringify(token)); 
-    //console.log(shoppingCart);
-    let data = {totalSum, shoppingCart, paymentRef, tableNumber, token};
-    addOrder(data);
+   
 }
 
 const addOrder = (data, response) => {
@@ -521,7 +540,6 @@ const addOrder = (data, response) => {
 }
 
 const insertOrderedItems = (data, orderID) =>{
-    //console.log(data, orderID);
     for(let d of data){
         insertOrdered = pool.query('insert into ordereditems (itemid,quantity, status,orderid,orderdate) values ($1, $2, $3,$4,$5);', [d.itemid, d.quantity, 'open',orderID,new Date()  ], (error, results) => {
             if(error){
@@ -533,7 +551,6 @@ const insertOrderedItems = (data, orderID) =>{
 }
 
 const checkAuthForClientView = (request, response) => {
-    //sendData = [];
     sendData1 = '';
     sendData2 = '';
     orderID = 0;
@@ -551,7 +568,6 @@ const checkAuthForClientView = (request, response) => {
             if(results.rowCount == 0){
                 response.status(404).send("No Order with this Token!!!");
             }
-            //sendData.push(getOrder(results));
             sendData1 = getOrder(results);
             orderID = getOrderId(results);
 
@@ -565,8 +581,6 @@ const checkAuthForClientView = (request, response) => {
                     console.log("No OrderedItems with this Id!!!");
                 }
                 
-                //sendData.push(results.rows);
-                //response.status(200).send(sendData);
                 sendData2 = results2.rows;
                 response.status(200).send({
                  sendData1,sendData2

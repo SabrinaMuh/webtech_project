@@ -109,3 +109,6 @@ ALTER TABLE public.tables ALTER COLUMN tableid ADD GENERATED ALWAYS AS IDENTITY 
 
 ALTER TABLE ONLY public.tables
     ADD CONSTRAINT tables_pkey PRIMARY KEY (tableid);
+
+ALTER TABLE IF EXISTS public.ordereditems
+    ALTER COLUMN ordereditemsid ADD GENERATED ALWAYS AS IDENTITY;

@@ -353,7 +353,7 @@ const dislikeMenuItem = (request, response) => {
     });
 }
 
-const addCategorie = (request, response) => {
+const addCategorie = async(request, response) => {
     if (request.body == null){
         response.status(400).json({
             "message": "body is empty"
@@ -361,16 +361,9 @@ const addCategorie = (request, response) => {
         return;
     }
 
-    const id = request.body.id;
     const title = request.body.name;
-    const description = request.body.description;
-
-    if (id == null || id === ""){
-        response.status(400).json({
-            "message": "id must be specified"
-        })
-        return;
-    }
+    const type = request.body.type;
+    const desc = request.body.desc;
 
     if(title == null || title === ""){
         response.status(400).json({
@@ -379,23 +372,7 @@ const addCategorie = (request, response) => {
         return;
     }
 
-    if(description == null || description === ""){
-        response.status(400).json({
-            "message": "description must be specified"
-        })
-        return;
-    }
-
-    resultID = pool.query("SELECT * FROM public.category WHERE categoryid = $1", [id], (error, results) => {
-        if (results.rowCount > 0) {
-            res.status(400).json({
-                "message": "object with id "+ id + " already exits"
-            });
-            return;
-        }
-    });
-
-    category = pool.query("INSERT INTO public.category( categoryid, title, description) VALUES ($1, $2, $3)", [id, title, description], (error, results) => {
+    category = pool.query("INSERT INTO category(title, categorytype, description) VALUES ($1, $2, $3)", [title, type, desc], (error, results) => {
         if(error){
             response.status(409).send("Conflict: Add not possibly");
             return;
@@ -406,12 +383,10 @@ const addCategorie = (request, response) => {
     });
 }
 
-
-
-const findCategory = (request, response) => {
+const findCategory = async(request, response) => {
     const id = request.params.id;
 
-    category = pool.query("SELECT * FROM public.category WHERE categoryid = $1", [id], (error, results) => {
+    category = pool.query("SELECT * FROM category WHERE categoryid = $1", [id], (error, results) => {
         if(error){
             response.status(404).send(error);
         }
@@ -422,7 +397,7 @@ const findCategory = (request, response) => {
     });
 }
 
-const deleteCategory = (request, response) => {
+const deleteCategory = async(request, response) => {
     const id = request.params.id;
 
     category = pool.query("Select * from category Where categoryid = $1", [id], (error, results) => {
@@ -438,7 +413,7 @@ const deleteCategory = (request, response) => {
         }
     })
 
-    category = pool.query("DELETE FROM public.category WHERE categoryid = $1", [id], (error, results) => {
+    category = pool.query("DELETE FROM category WHERE categoryid = $1", [id], (error, results) => {
         if(error){
             response.status(409).json({
                 "message": "Conflict: Delete not possibly"
@@ -451,16 +426,17 @@ const deleteCategory = (request, response) => {
     })
 }
 
-const updateCategory = (request, response) => {
-    const id = request.params.id;
+const updateCategory = async(request, response) => {
+    const id = request.body.id;
     const title = request.body.name;
-    const description = request.body.description;
+    const type = request.body.type;
+    const desc = request.body.desc;
 
-    category = pool.query("UPDATE public.category SET title = $1, description = $2 WHERE categoryid = $3", [title, description, id], (error, results) => {
+    category = pool.query("UPDATE category SET title = $1, categorytype = $2, description = $3 WHERE categoryid = $4", [title, type, desc, id], (error, results) => {
         if(error){
             response.status(404).send("Category with this id is not avaiable.");
         }
-        response.status(200).json({"message": "Category with id " + iwd + " edited"});
+        response.status(200).json({"message": "Category with id " + id + " edited"});
     });
 }
 
@@ -1483,10 +1459,10 @@ app.put("/menuItem/allergene/:id", changeValueToNullAllergene);
 app.delete("/menuItem/allergene/:id/:allergen", deleteAllergeneFromMenuItem);
 app.get("/menuItem/categories/:id", findCategoriesForMenuItem);
 
-app.post("/category", addCategorie);
-app.get("/category/:id", findCategory);
-app.delete("/category/:id", deleteCategory);
-app.put("/category/:id", updateCategory);
+app.post("/categories", addCategorie);
+app.get("/categories/:id", findCategory);
+app.delete("/categories/:id", deleteCategory);
+app.put("/categories/:id", updateCategory);
 app.get("/categories", findAllCategories);
 
 

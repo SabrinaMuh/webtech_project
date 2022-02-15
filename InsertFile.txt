@@ -13,9 +13,13 @@ Insert into items values('8', 'Vesuvio al Ragù di Salsiccia', 'Vesuvio is a sho
 Insert into items values('9', 'Bucatini all Amatriciana', 'Named for the town of Amatrice, located about an hour northeast of Roma, this simple dish combines sweet and tangy tomato sauce with rich guanciale (cured pork jowl) and sharp Pecorino Romano DOP cheese, with a spicy kick from peperoncini, or dried chili flakes. The best part? The hollow bucatini make each bite extra saucy.','10.80','0','0','available');
 Insert into items values('10', 'Spaghetti alle Vongole', 'Briny clams, white wine, garlic, and peperoncino create a light yet intensely flavorful sauce in this classic Neapolitan spaghetti dish. Look for the freshest clams possible (check with our fishmongers at your local Eataly for a recommendation), and high-quality, bronze-extruded pasta – the coarse texture will help the sauce cling to each strand.','10.80','0','0','available');
 
-Insert into category values('1', 'Pizza', 'Traditional italien pizza made with love from our professianal pizza baker Claudio. All pizzas are prepared in a traditional stone oven.');
-Insert into category values('2', 'Pasta', 'All pasta is 100% hand-made. This is the reason, why we are opened only at night. All over the day, we prepare fresh pasta!');
-Insert into category values('3', 'Weekly Specials', 'Explore new dishes and promotions every week!');
+INSERT INTO public.category(title, description, categorytype)
+	VALUES 
+	('Pizza', 'Traditional italien pizza made with love from our professianal pizza baker Claudio. All pizzas are prepared in a traditional stone oven.', 'food'),
+	('Pasta', 'All pasta is 100% hand-made. This is the reason, why we are opened only at night. All over the day, we prepare fresh pasta!', 'food'),
+	('Weekly Specials', 'Explore new dishes and promotions every week!', 'specials'),
+	('Weine', 'Rot, weiß oder rosé.', 'beverage'),
+	('Frühstück', '', 'special');
 
 Insert into item_hasAllergens values('1','A');
 Insert into item_hasAllergens values('1','B');
@@ -120,3 +124,7 @@ Insert into reviews values ('Chrisi', 'Chrisi', '2022-01-06', 'Lorem ipsum dolor
 Insert into reviews values ('Sabine', 'Sabine', '2022-01-07', 'Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et', 2 );
 Insert into reviews values ('Ingrid', 'Ingrid', '2022-01-08', 'Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et', 2 );
 Insert into reviews values ('Tommy', 'Tommy', '2022-01-09', 'Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et', 1 );
+
+Insert into public.tables (tablenumber, capacity, description)
+Values (11, 4, 'The only one table here. You cannot miss it.'),
+(12, 2, 'Eingang links');

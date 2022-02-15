@@ -699,7 +699,8 @@ function getCategories(results){
         resultMap[row.categoryid] = {
             id: row.categoryid,
             name: row.title,
-            description: row.description
+            type: row.categorytype,
+            desc: row.description
         }
     }
 

@@ -1431,6 +1431,7 @@ module.exports = {
     updateTable,
     findAllTables,
     //-------------------------------------------------
+    //------------- Guest View --------------------------
     addReview,
     askPayment,
     addReview,
@@ -1441,6 +1442,8 @@ module.exports = {
     getOrderedItems2,
     loadProducts,
     checkAuthForClientView,
+      //------------- Guest View --------------------------
+      
     //Kitchen View
     updateMenuItemStatus,
     getOrderedItems,
@@ -1461,13 +1464,12 @@ module.exports = {
     
 
 }
-
+// ---------- Sabrina ------------------------------------------------------------------------
 app.post("/user", addUser);
 app.get("/user/:id", findUser);
 app.delete("/user/:id", deleteUser);
 app.put("/user/:id", updateUser);
 app.get("/users", findAllUsers);
-
 app.get("/menuItem/:id", findMenuItem);
 app.post("/menuItem", addMenuItem);
 app.delete("/menuItem/:id", deleteMenuItem);
@@ -1485,13 +1487,12 @@ app.put("/menuItem/allergene/:id/:allergen", changeNullValueAllergene);
 app.put("/menuItem/allergene/:id", changeValueToNullAllergene);
 app.delete("/menuItem/allergene/:id/:allergen", deleteAllergeneFromMenuItem);
 app.get("/menuItem/categories/:id", findCategoriesForMenuItem);
-
 app.post("/categories", addCategorie);
 app.get("/categories/:id", findCategory);
 app.delete("/categories/:id", deleteCategory);
 app.put("/categories/:id", updateCategory);
 app.get("/categories", findAllCategories);
-
+// ---------- Sabrina ------------------------------------------------------------------------
 
 // ---------- Kerstin ------------------------------------------------------------------------
 app.post("/tables", addTable);
@@ -1501,18 +1502,15 @@ app.put("/tables/:id", updateTable);
 app.get("/tables", findAllTables);
 //---------------------------------------------------------------------------------------------
 
-
+// ---------- Guest View ------------------------------------------------------------------------
 app.post("/:table/dashboard/reviews", addReview);
-
 app.post("/:table/dashboard/payment", askPayment);
-
 app.post("/:table/callWaiter", addWaiterCall);
 app.get("/:table/getCallID", loadConsulID);
 app.get("/:table/getCallStatus/:id", loadConsulStatus);
 app.get("/:table/dashboard/products", findAllMenuItems2);
 app.post("/:table/dashboard/payment/jwt", checkAuthForClientView);
 app.get("/:table/dashboard/reviews", (req, res) => {
-        // TODO: write your code here to get the list of products from the DB pool
         loadReviews()
             .then(dbResult => {
              res.send(dbResult.rows);
@@ -1524,26 +1522,26 @@ app.get("/:table/dashboard/reviews", (req, res) => {
                 res.status(400).send("ErrorPage not found on the server")
             });
         });
+// ---------- Guest View ------------------------------------------------------------------------
 
-        //Kitchen View
-
-        app.put("/menuItem/status/:id", updateMenuItemStatus);
-        app.get("/orderedItems",getOrderedItems);
-        app.get("/orders",getOrders)
-        app.put("/orderedItem/status/:id",updateOrderedItemStatus);
-        app.put("/orderedItem/comment/:id",updateOrderedItemComment);
-        app.put("/order/status/:id",updateOrderStatus);
-        app.get("/readyItems",getReadyItems);
-        app.get("/consultations",getConsultations);
-        app.delete("/consultation/:id",deleteConsultation);
-        app.get("/kitchen/categories", getKitchenCategories);
-        app.get("/hasCategory", getHasCategory);
-        app.post("/hasCategory/:catId/:itemId",addHasCategory);
-        app.delete("/hasCategory/:catId/:itemId",deleteHasCategory);
-        
-        app.get("/login/:username/:password", getLoginUser);
-        app.post("/auth/login",createJWT);
-        app.post("/auth/authenticate", checkAuth);
+// ---------- Kitchen View ------------------------------------------------------------------------
+app.put("/menuItem/status/:id", updateMenuItemStatus);
+app.get("/orderedItems",getOrderedItems);
+app.get("/orders",getOrders)
+app.put("/orderedItem/status/:id",updateOrderedItemStatus);
+app.put("/orderedItem/comment/:id",updateOrderedItemComment);
+app.put("/order/status/:id",updateOrderStatus);
+app.get("/readyItems",getReadyItems);
+app.get("/consultations",getConsultations);
+app.delete("/consultation/:id",deleteConsultation);
+app.get("/kitchen/categories", getKitchenCategories);
+app.get("/hasCategory", getHasCategory);
+app.post("/hasCategory/:catId/:itemId",addHasCategory);
+app.delete("/hasCategory/:catId/:itemId",deleteHasCategory);
+app.get("/login/:username/:password", getLoginUser);
+app.post("/auth/login",createJWT);
+app.post("/auth/authenticate", checkAuth);
+// ---------- Kitchen View ------------------------------------------------------------------------
 
 	
 let port = 3000;

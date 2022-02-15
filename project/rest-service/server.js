@@ -567,7 +567,7 @@ const checkAuthForClientView = (request, response) => {
                 
                 //sendData.push(results.rows);
                 //response.status(200).send(sendData);
-                sendData2 = results.rows;
+                sendData2 = results2.rows;
                 response.status(200).send({
                  sendData1,sendData2
                 })

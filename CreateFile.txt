@@ -15,11 +15,29 @@ dislikes int not null,
 status varchar(255) not null
 );
 
-create table category (
-categoryId int primary key not null,
-title varchar(255) NOT NULL,
-description varchar(255 ) NOT NULL
+CREATE TABLE public.category (
+    categoryid integer NOT NULL,
+    title character varying(255) NOT NULL,
+    categorytype character varying(255) NOT NULL,
+    description character varying(255) NOT NULL
 );
+
+
+ALTER TABLE public.category OWNER TO postgres;
+
+ALTER TABLE public.category ALTER COLUMN categoryid ADD GENERATED ALWAYS AS IDENTITY (
+    SEQUENCE NAME public.category_categoryid_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+ALTER TABLE ONLY public.category
+    ADD CONSTRAINT category_pkey PRIMARY KEY (categoryid);
+
+
 create table orders (
 orderId int NOT NULL  PRIMARY KEY,
 status varchar(255) NOT NULL,
@@ -68,3 +86,26 @@ status varchar(255)
 
 ALTER TABLE IF EXISTS public.consultations
     ALTER COLUMN consulid ADD GENERATED ALWAYS AS IDENTITY ( INCREMENT 1 START 20 MINVALUE 1 );
+
+
+CREATE TABLE public.tables (
+    tableid integer NOT NULL,
+    tablenumber integer NOT NULL,
+    capacity integer NOT NULL,
+    description character varying(255)
+);
+
+
+ALTER TABLE public.tables OWNER TO postgres;
+
+ALTER TABLE public.tables ALTER COLUMN tableid ADD GENERATED ALWAYS AS IDENTITY (
+    SEQUENCE NAME public.tables_tableid_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+ALTER TABLE ONLY public.tables
+    ADD CONSTRAINT tables_pkey PRIMARY KEY (tableid);
